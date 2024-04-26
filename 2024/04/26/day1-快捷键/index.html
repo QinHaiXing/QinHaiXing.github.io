@@ -1,0 +1,212 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>QQF 's blog | QQF 's blog</title><meta name="author" content="QQF"><meta name="copyright" content="QQF"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="title: 编程日记date:2024-03-25 18:23:12编程日记快捷键typora常用快捷键ctrl + &#x2F; 切换编辑语法模式&#x2F;预览模式 ctrl + 1 6 标题16 等同于一级标题：#+空格+标题内容二级标题：##+空格+标题内容三级标题：###+空格+标题内容……最多六级标题 ctrl + B 粗体 ctrl + I 斜体 ctrl + T 表格  无序列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="QQF &#39;s blog">
+<meta property="og:url" content="https://blog.qqfweb.cc/2024/04/26/day1-%E5%BF%AB%E6%8D%B7%E9%94%AE/index.html">
+<meta property="og:site_name" content="QQF &#39;s blog">
+<meta property="og:description" content="title: 编程日记date:2024-03-25 18:23:12编程日记快捷键typora常用快捷键ctrl + &#x2F; 切换编辑语法模式&#x2F;预览模式 ctrl + 1 6 标题16 等同于一级标题：#+空格+标题内容二级标题：##+空格+标题内容三级标题：###+空格+标题内容……最多六级标题 ctrl + B 粗体 ctrl + I 斜体 ctrl + T 表格  无序列">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://source.fomal.cc/img/default_cover_14.webp">
+<meta property="article:published_time" content="2024-04-26T10:08:24.263Z">
+<meta property="article:modified_time" content="2024-04-26T12:46:42.606Z">
+<meta property="article:author" content="QQF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://source.fomal.cc/img/default_cover_14.webp"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.qqfweb.cc/2024/04/26/day1-%E5%BF%AB%E6%8D%B7%E9%94%AE/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":false,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'QQF \'s blog',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-26 20:46:42'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.2.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/smile.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://source.fomal.cc/img/default_cover_14.webp')"><nav id="nav"><span id="blog-info"><a href="/" title="QQF 's blog"><img class="site-icon" src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/smile.jpg"/><span class="site-name">QQF 's blog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">无题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-04-26T10:08:24.263Z" title="发表于 2024-04-26 18:08:24">2024-04-26</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-26T12:46:42.606Z" title="更新于 2024-04-26 20:46:42">2024-04-26</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><hr>
+<h2 id="title-编程日记date-2024-03-25-18-23-12"><a href="#title-编程日记date-2024-03-25-18-23-12" class="headerlink" title="title: 编程日记date:2024-03-25 18:23:12"></a>title: 编程日记<br>date:2024-03-25 18:23:12</h2><h1 id="编程日记"><a href="#编程日记" class="headerlink" title="编程日记"></a>编程日记</h1><h2 id="快捷键"><a href="#快捷键" class="headerlink" title="快捷键"></a>快捷键</h2><p>typora常用快捷键<br>ctrl + &#x2F; 切换编辑语法模式&#x2F;预览模式</p>
+<p>ctrl + 1 <del>6 标题1</del>6 等同于<br>一级标题：#+空格+标题内容<br>二级标题：##+空格+标题内容<br>三级标题：###+空格+标题内容<br>……<br>最多六级标题</p>
+<p>ctrl + B 粗体</p>
+<p>ctrl + I 斜体</p>
+<p>ctrl + T 表格</p>
+<ul>
+<li>无序列表：” <strong>-</strong> “+ 空格 或 “ * ” + 空格</li>
+<li>有序列表：数字+“.”+空格</li>
+<li>生成目录：[TOC]按回车</li>
+<li>选中一整行：ctrl+l</li>
+<li>选中单词：ctrl+d</li>
+<li>选中相同格式的文字：ctrl+e</li>
+<li>跳转到文章开头：ctrl+home</li>
+<li>跳转到文章结尾：ctrl+end</li>
+<li>搜索：ctrl+f</li>
+<li>替换：ctrl+h</li>
+<li>引用：输入&gt;之后输入空格</li>
+<li>代码块：ctrl+shfit+k</li>
+<li>加粗：ctrl+b</li>
+<li>倾斜：ctrl+i</li>
+<li>下划线：ctrl+u</li>
+<li>删除线：alt+shift+5 或 ～～内容～～</li>
+<li>分割线：- - - 或***</li>
+<li>插入链接：ctrl+k</li>
+<li>数学公式：$$ + enter</li>
+<li>表情: :+单词+:</li>
+<li><strong>常用表情地址：</strong><a target="_blank" rel="noopener" href="https://www.webfx.com/tools/emoji-cheat-sheet/">https://www.webfx.com/tools/emoji-cheat-sheet/</a></li>
+<li>目录：[toc] + enter</li>
+<li>插入图片：直接拖动到指定位置即可或者ctrl+shift+i</li>
+</ul>
+<h2 id="day1"><a href="#day1" class="headerlink" title="day1"></a>day1</h2><p>关于我为什么要开始写编程日记，之前我对日记是不屑的，我总是觉得没什么好记的。最主要是觉得浪费时间。</p>
+<p>现在开始写是因为我的想法发生了一些改变：</p>
+<p>目前状况，每天学习3~5个小时，我坚持了大概有一周，一周之后我就发现，我忘记了之前学的 </p>
+<p>什么框架啊 理论啊 七七八八的 还有nodejs的安装啊 环境的搭建啊  这些东西很容易忘</p>
+<p>比如之前学的springboot框架 还有一些注解 总是容易漏</p>
+<p>所以 我决定尝试写日记 去记录一天学的东西 </p>
+<p>其实我觉得 写日记 最重要的是 方便查 </p>
+<p>说实话 我觉得csdn有时候 有点不好找 不如找自己写的东西</p>
+<h2 id="node"><a href="#node" class="headerlink" title="node"></a>node</h2><p>安装好NodeJS以后如果不进行相关配置，会存在如下问题：</p>
+<p>第一个：执行类似：npm install express [-g] （后面的可选参数-g，g代表global全局安装的意思）的安装语句时，会将安装的模块安装到<strong>C:\Users\用户名\AppData\Roaming\npm</strong> 路径中</p>
+<p>设置淘宝镜像命令的是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm config set registry https://registry.npm.taobao.org</span><br></pre></td></tr></table></figure>
+
+<p>1<br>清除淘宝镜像命令即重新设置原来的即可，命令如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm config set registry https://registry.npmjs.org</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="直接编辑npm的配置文件"><a href="#直接编辑npm的配置文件" class="headerlink" title="直接编辑npm的配置文件"></a>直接编辑npm的配置文件</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">npm config edit</span><br><span class="line"></span><br><span class="line">npm cache clean --force  //清除缓存</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="yarn的常用命令："><a href="#yarn的常用命令：" class="headerlink" title="yarn的常用命令："></a>yarn的常用命令：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">yarn -v  // 查看yarn 版本</span><br><span class="line"></span><br><span class="line">yarn config list  // 查看yarn配置</span><br><span class="line"></span><br><span class="line">yarn config get registry   // 查看当前yarn源</span><br><span class="line"></span><br><span class="line">// 修改yarn源（此处为淘宝的源）</span><br><span class="line">yarn config set registry https://registry.npm.taobao.org  </span><br><span class="line"></span><br><span class="line">// yarn安装依赖</span><br><span class="line">      </span><br><span class="line">yarn global bin // 会出现 yarn 安装的全局路径</span><br><span class="line">yarn add 包名          // 局部安装</span><br><span class="line"></span><br><span class="line">yarn global add 包名   // 全局安装</span><br><span class="line"></span><br><span class="line">// yarn 卸载依赖</span><br><span class="line">yarn remove 包名         // 局部卸载</span><br><span class="line">yarn global remove 包名  // 全局卸载（如果安装时安到了全局，那么卸载就要对应卸载全局的）</span><br><span class="line">// yarn 查看全局安装过的包</span><br></pre></td></tr></table></figure>
+
+<h2 id="npm-ERR-errno-4048"><a href="#npm-ERR-errno-4048" class="headerlink" title="npm ERR! errno -4048"></a>npm ERR! errno -4048</h2><p>npm ERR! Error: EPERM: operation not permitted, mkdir ‘D:\software\nodejs\node_cache_cacache’</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_50790981/article/details/124991911?spm=1001.2101.3001.6650.6&utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~Rate-6-124991911-blog-79818011.235%5Ev43%5Epc_blog_bottom_relevance_base1&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~Rate-6-124991911-blog-79818011.235%5Ev43%5Epc_blog_bottom_relevance_base1">Error: EPERM: operation not permitted, mkdir ‘D:\software\nodejs\node_cache_cacach两种解决办法-CSDN博客</a></p>
+<h2 id="idea新快捷键"><a href="#idea新快捷键" class="headerlink" title="idea新快捷键"></a>idea新快捷键</h2><p>alt+f7:查看当前变量在所有文件中的使用</p>
+<p>ctrl+e:方便打开最近使用文件</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.qqfweb.cc">QQF</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.qqfweb.cc/2024/04/26/day1-%E5%BF%AB%E6%8D%B7%E9%94%AE/">https://blog.qqfweb.cc/2024/04/26/day1-%E5%BF%AB%E6%8D%B7%E9%94%AE/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://blog.qqfweb.cc" target="_blank">QQF 's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://source.fomal.cc/img/default_cover_14.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2024/03/25/%E8%AE%A1%E5%88%92%E4%B9%A601%EF%BC%9A%E4%BC%99%E4%BC%B4%E5%8C%B9%E9%85%8D%E7%B3%BB%E7%BB%9F/" title="编程日记"><img class="cover" src="https://source.fomal.cc/img/default_cover_14.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">编程日记</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/smile.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">QQF</div><div class="author-info__description">真正的爱，应该超越生命的长度、心灵的宽度、灵魂的深度。</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/QinHaiXing" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:1477258523@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#title-%E7%BC%96%E7%A8%8B%E6%97%A5%E8%AE%B0date-2024-03-25-18-23-12"><span class="toc-number">1.</span> <span class="toc-text">title: 编程日记date:2024-03-25 18:23:12</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%BC%96%E7%A8%8B%E6%97%A5%E8%AE%B0"><span class="toc-number"></span> <span class="toc-text">编程日记</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BF%AB%E6%8D%B7%E9%94%AE"><span class="toc-number">1.</span> <span class="toc-text">快捷键</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#day1"><span class="toc-number">2.</span> <span class="toc-text">day1</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#node"><span class="toc-number">3.</span> <span class="toc-text">node</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%9B%B4%E6%8E%A5%E7%BC%96%E8%BE%91npm%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-number">3.0.1.</span> <span class="toc-text">直接编辑npm的配置文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#yarn%E7%9A%84%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%EF%BC%9A"><span class="toc-number">3.0.2.</span> <span class="toc-text">yarn的常用命令：</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#npm-ERR-errno-4048"><span class="toc-number">4.</span> <span class="toc-text">npm ERR! errno -4048</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#idea%E6%96%B0%E5%BF%AB%E6%8D%B7%E9%94%AE"><span class="toc-number">5.</span> <span class="toc-text">idea新快捷键</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2024/04/26/day1-%E5%BF%AB%E6%8D%B7%E9%94%AE/" title="无题"><img src="https://source.fomal.cc/img/default_cover_14.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2024/04/26/day1-%E5%BF%AB%E6%8D%B7%E9%94%AE/" title="无题">无题</a><time datetime="2024-04-26T10:08:24.263Z" title="发表于 2024-04-26 18:08:24">2024-04-26</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/03/25/%E8%AE%A1%E5%88%92%E4%B9%A601%EF%BC%9A%E4%BC%99%E4%BC%B4%E5%8C%B9%E9%85%8D%E7%B3%BB%E7%BB%9F/" title="编程日记"><img src="https://source.fomal.cc/img/default_cover_14.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="编程日记"/></a><div class="content"><a class="title" href="/2024/03/25/%E8%AE%A1%E5%88%92%E4%B9%A601%EF%BC%9A%E4%BC%99%E4%BC%B4%E5%8C%B9%E9%85%8D%E7%B3%BB%E7%BB%9F/" title="编程日记">编程日记</a><time datetime="2024-03-25T10:23:12.000Z" title="发表于 2024-03-25 18:23:12">2024-03-25</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By QQF</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.13.0"></script></div></div></body></html>
