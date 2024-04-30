@@ -11,6 +11,12 @@
         <content type="html"><![CDATA[<p>计划书08-复习和推进</p><p>这几天也想写计划书 但是每次想写的时候都是很晚了 </p><p>有的时候有想法 但是又懒得打开 主要是之前没有弄图床 而且又一直在弄域名和个人博客 所以主线就落下了几天</p><p>今天打算先复习 然后写一下这几天个人博客搭建的过程 图床的过程</p><p>具体计划：</p><ol><li>完成“全面认识全过程人民民主”形策论文</li><li>写一篇图床的搭建过程</li><li>复习上次写的Spring八股和MySQL八股</li><li>推进主线 学习伙伴匹配系统 55~57</li></ol><p>加油加油🚀🚀🚀</p>]]></content>
       
       
+      <categories>
+          
+          <category> 计划书 </category>
+          
+      </categories>
+      
       
     </entry>
     
@@ -23,6 +29,31 @@
       
         <content type="html"><![CDATA[<h1 id="原子性（Automicity）"><a href="#原子性（Automicity）" class="headerlink" title="原子性（Automicity）"></a>原子性（Automicity）</h1><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>原子性（Automicity）：事务是一个不可分割的工作单位，事务中的所有操作要么全部完成，要么全部不完成，不会出现部分完成的情况。如果再事务过程中发生错误，会将事务中所有已经执行的操作撤销（回滚Rollback）。</p><h2 id="例子："><a href="#例子：" class="headerlink" title="例子："></a>例子：</h2><p>假设有一个银行转账业务，其中需要更新两个账户的余额。如果这两个操作没有被作为一个原子操作来执行，那就可能出现数据不一致的情况。例如，当转出账户的余额已经被减去了一定数额，但由于某些原因（如系统故障、断电等），转入账户的余额没有被增加，此时就会出现数据不一致的情况。</p><p>因此，在这个例子中，将更新两个账户的余额的操作作为一个原子操作，确保这两个操作要么全部执行，要么全部不执行，以保证数据的一致性。如果其中任何一个操作失败，整个事务都应该回滚，保证事务的原子性。</p><h1 id="一致性（Consistency）"><a href="#一致性（Consistency）" class="headerlink" title="一致性（Consistency）"></a>一致性（Consistency）</h1><h2 id="概念-1"><a href="#概念-1" class="headerlink" title="概念"></a>概念</h2><p>一致性（Consistency）：事务执行的结果必须使数据库从一个一致性状态变为另一个一致性状态。一致性是指数据的完整性和业务逻辑的正确性。</p><h2 id="例子：-1"><a href="#例子：-1" class="headerlink" title="例子："></a>例子：</h2><p>假设一个订单系统，其中一个订单包含了多个商品的信息和总价。为保证系统的一致性，订单的总价应该等于各个商品的价格总和。</p><p>如果再多个事务同时修改订单中的商品价格，就可能导致订单的总价与商品价格总和不一致，从而破坏了数据的一致性。为了解决这个问题，需要对这些修改操作进行协调和同步，使得任何时刻订单的总价都等于各个商品价格总和。</p><p>在这个例子中，可以采用锁机制来保证数据的一致性。在修改订单中商品价格的时候，需要先对订单进行加锁，防止其他事务修改订单中的商品信息，直到本事务完成修改操作并释放锁之后，其他事务才能继续对订单进行操作，从而保证数据的一致性。</p><h1 id="隔离性（Isolation）"><a href="#隔离性（Isolation）" class="headerlink" title="隔离性（Isolation）"></a>隔离性（Isolation）</h1><h2 id="概念-2"><a href="#概念-2" class="headerlink" title="概念"></a>概念</h2><p>隔离性（Isolation）：多个事务并发执行时，每个事务都应该感觉不到其他事务的存在，各个事务之间应该是隔离的。事务之间的隔离级别会导致不同的并发问题，如脏读、不可重复读和幻读问题。（具体概念例子可以参考博主其他文章《数据库事务四种隔离级别》、《脏读、不可重复读和幻读》）</p><h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>假设一个银行系统中，用户A和用户B都有各自的账户，并且他们的账户都有1000元的余额。现在用户A向用户B转账500元。这个转账操作会涉及到两个账户的余额的变动，需要使用数据库事务来保证转账操作的正确性。</p><p>在这个转账操作的过程中，如果没有适当的隔离级别，就可能出现一下情况：</p><p>脏读：用户A转账500元之后，但还没提交事务，此时用户B可以读取到账户的变动，但这个变动可能是不可能靠的，因为他随时可能会被回滚。<br>不可重复读：用户B在读取账户的余额之后，用户A又取消了这次转账操作并提交了业务，此时用户B再次读取账户的余额，就会发现和之前读取到的不一样。<br>幻读：假设在转账操作中，还有一个触发器会自动从用户A和用户B的账户中扣除一定的手续费。如果用户A和用户B同时在转账操作中扣除了手续费，就可能出现幻读的情况，即用户A和用户B同时读取到了旧的余额，但在提交事务时却发现总的余额不对。<br>为了避免这些问题，可以用数据库的隔离级别来保证转账操作的正确性。例如，可以使用串行化隔离级别来保证转账操作的原子性、一致性和隔离性，从而避免脏读、不可重复读和幻读的问题。</p><h1 id="持久性（Durability）"><a href="#持久性（Durability）" class="headerlink" title="持久性（Durability）"></a>持久性（Durability）</h1><h2 id="概念-3"><a href="#概念-3" class="headerlink" title="概念"></a>概念</h2><p>持久性（Durability）：一个事务一旦提交，他对数据库中的数据的改变就应该是永久性的。即使出现宕机或者其他异常情况，数据库系统应该能够保证事务的持久性。</p><h2 id="例子-1"><a href="#例子-1" class="headerlink" title="例子"></a>例子</h2><p>例如一个用户注册功能的实现。</p><p>当一个用户在应用程序中注册时，这个操作需要保证其持久性。也就是说，一旦用户注册成功，用户的信息应该被持计划的存储在数据库中，以便在用户下一次登录时可以被检索到。</p><p>这个过程需要确保事务的持久性特性，即在用户注册成功后，事务被提交并将数据持久化到数据库中，即使在应用程序或数据库出现故障或重启的情况下，用户数据也能得到保留，不会丢失。</p>]]></content>
       
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>事务ACID特性</title>
+      <link href="/2024/04/25/1-Spring%E7%9A%84%E5%8D%95%E4%BE%8BBean%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%90%97%EF%BC%9F/"/>
+      <url>/2024/04/25/1-Spring%E7%9A%84%E5%8D%95%E4%BE%8BBean%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%90%97%EF%BC%9F/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Spring的单例Bean线程安全吗？"><a href="#Spring的单例Bean线程安全吗？" class="headerlink" title="Spring的单例Bean线程安全吗？"></a>Spring的单例Bean线程安全吗？</h1><p>首先 Spring中创建一个Bean默认是单例模式的  但是可以通过注解去修改</p><p>实现方式：</p><p>通过注解@Scope去实现</p><p><strong>在bean时，加一个scope &#x3D; “prototype”；如果不写个默认是true，也就是单例的（singleton），写了就是多例的</strong></p><p><img src="https://gitee.com/antidote-git/photo/raw/master/img/202404262356128.png" alt="image-20240423133839585"></p><h2 id="所以Spring的单例Bean线程安全吗？"><a href="#所以Spring的单例Bean线程安全吗？" class="headerlink" title="所以Spring的单例Bean线程安全吗？"></a>所以Spring的单例Bean线程安全吗？</h2><p><img src="https://gitee.com/antidote-git/photo/raw/master/img/202404262356343.png" alt="image-20240423134911838"></p><h3 id="结论："><a href="#结论：" class="headerlink" title="结论："></a><strong>结论：</strong></h3><ul><li><strong>count存在线程安全问题 userService不存在线程安全问题</strong></li></ul><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">例如 如下图所示 count是一个成员变量 每一个用户都可以去修改count 所以会出现线程安全问题</span><br><span class="line">之所以userService安全 是因为userService是无状态的 无状态指的是当前成员变量是否能被修改 </span><br><span class="line">因为userService的成员变量不能被修改 所以是线程安全的</span><br></pre></td></tr></table></figure><h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a><strong>总结：</strong></h3><ul><li>定义能修改的成员变量 存在线程安全问题 </li><li>定义无状态的成员变量 没有线程安全问题</li></ul><p>如果定义的能修改的成员变量 如何解决： 使用多例模式 或者 加锁</p><h2 id="spring的bean为什么是单例的？"><a href="#spring的bean为什么是单例的？" class="headerlink" title="spring的bean为什么是单例的？"></a>spring的bean为什么是单例的？</h2><p>答：为了提高性能。</p><ul><li>由于不会每次都新创建新对象，所以就减少了新生成实例的消耗。因为spring会通过反射或者cglib来生成bean实例这都是耗性能的操作，其次给对象分配内存也会涉及复杂算法。</li><li>减少JVM垃圾回收，由于不会给每个请求都新生成bean实例，所以自然回收的对象少了。</li><li>可以快速获取到bean，因为单例的获取bean操作除了第一次生成之外其余的都是从缓存里获取的所以很快。</li><li>缺点就是在并发环境下可能会出现线程安全问题</li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> Spring </category>
+          
+      </categories>
       
       
     </entry>
@@ -50,18 +81,11 @@
         <content type="html"><![CDATA[<h1 id="计划书：伙伴匹配系统"><a href="#计划书：伙伴匹配系统" class="headerlink" title="计划书：伙伴匹配系统"></a>计划书：伙伴匹配系统</h1><h2 id="背景："><a href="#背景：" class="headerlink" title="背景："></a><strong>背景：</strong></h2><p>2024.04.07</p><p>刚刚做清明回来 有两三天这样么敲代码了 昨天回来太累了 就没状态敲代码  </p><p>现在打算复习一下上次学的 上次学到<strong>redis</strong> 打算复习一下redis （其实本来就没学多少）</p><h2 id="具体计划："><a href="#具体计划：" class="headerlink" title="具体计划："></a>具体计划：</h2><p>33~36</p><ul><li>33.redis入门</li><li>34.缓存开发和注意事项</li><li>35.缓存预热设计与实现</li><li>36.定时任务介绍和实现</li><li>37.锁、分布式锁介绍</li></ul><h2 id="个人总结："><a href="#个人总结：" class="headerlink" title="个人总结："></a>个人总结：</h2><p>几天先做这么多事吧  刚刚回来不想给自己太多压力 先调整状态</p>]]></content>
       
       
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>Spring的单例Bean线程安全吗?</title>
-      <link href="/2024/03/25/1-Spring%E7%9A%84%E5%8D%95%E4%BE%8BBean%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%90%97%EF%BC%9F/"/>
-      <url>/2024/03/25/1-Spring%E7%9A%84%E5%8D%95%E4%BE%8BBean%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%90%97%EF%BC%9F/</url>
-      
-        <content type="html"><![CDATA[<h1 id="Spring的单例Bean线程安全吗？"><a href="#Spring的单例Bean线程安全吗？" class="headerlink" title="Spring的单例Bean线程安全吗？"></a>Spring的单例Bean线程安全吗？</h1><p>首先 Spring中创建一个Bean默认是单例模式的  但是可以通过注解去修改</p><p>实现方式：</p><p>通过注解@Scope去实现</p><p><strong>在bean时，加一个scope &#x3D; “prototype”；如果不写个默认是true，也就是单例的（singleton），写了就是多例的</strong></p><p><img src="C:\Users\Atdote\AppData\Roaming\Typora\typora-user-images\image-20240423133839585.png" alt="image-20240423133839585"></p><h2 id="所以Spring的单例Bean线程安全吗？"><a href="#所以Spring的单例Bean线程安全吗？" class="headerlink" title="所以Spring的单例Bean线程安全吗？"></a>所以Spring的单例Bean线程安全吗？</h2><p><img src="C:\Users\Atdote\AppData\Roaming\Typora\typora-user-images\image-20240423134911838.png" alt="image-20240423134911838"></p><h3 id="结论："><a href="#结论：" class="headerlink" title="结论："></a><strong>结论：</strong></h3><ul><li><strong>count存在线程安全问题 userService不存在线程安全问题</strong></li></ul><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">例如 如下图所示 count是一个成员变量 每一个用户都可以去修改count 所以会出现线程安全问题</span><br><span class="line">之所以userService安全 是因为userService是无状态的 无状态指的是当前成员变量是否能被修改 </span><br><span class="line">因为userService的成员变量不能被修改 所以是线程安全的</span><br></pre></td></tr></table></figure><h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a><strong>总结：</strong></h3><ul><li>定义能修改的成员变量 存在线程安全问题 </li><li>定义无状态的成员变量 没有线程安全问题</li></ul><p>如果定义的能修改的成员变量 如何解决： 使用多例模式 或者 加锁</p><h2 id="spring的bean为什么是单例的？"><a href="#spring的bean为什么是单例的？" class="headerlink" title="spring的bean为什么是单例的？"></a>spring的bean为什么是单例的？</h2><p>答：为了提高性能。</p><ul><li>由于不会每次都新创建新对象，所以就减少了新生成实例的消耗。因为spring会通过反射或者cglib来生成bean实例这都是耗性能的操作，其次给对象分配内存也会涉及复杂算法。</li><li>减少JVM垃圾回收，由于不会给每个请求都新生成bean实例，所以自然回收的对象少了。</li><li>可以快速获取到bean，因为单例的获取bean操作除了第一次生成之外其余的都是从缓存里获取的所以很快。</li><li>缺点就是在并发环境下可能会出现线程安全问题</li></ul>]]></content>
-      
+      <categories>
+          
+          <category> 计划书 </category>
+          
+      </categories>
       
       
     </entry>
