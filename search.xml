@@ -42,7 +42,7 @@
     
     
     <entry>
-      <title>事务ACID特性</title>
+      <title>Spring的单例Bean线程安全吗？</title>
       <link href="/2024/04/25/1-Spring%E7%9A%84%E5%8D%95%E4%BE%8BBean%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%90%97%EF%BC%9F/"/>
       <url>/2024/04/25/1-Spring%E7%9A%84%E5%8D%95%E4%BE%8BBean%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%90%97%EF%BC%9F/</url>
       
