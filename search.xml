@@ -4,6 +4,56 @@
   
     
     <entry>
+      <title>什么是MVCC</title>
+      <link href="/2024/05/09/07-MVCC/"/>
+      <url>/2024/05/09/07-MVCC/</url>
+      
+        <content type="html"><![CDATA[<h1 id="什么是MVCC"><a href="#什么是MVCC" class="headerlink" title="什么是MVCC"></a>什么是MVCC</h1><ul><li>MVCC指的是<strong>多版本并发控制</strong></li><li>用于<strong>实现事务的并发控制</strong></li><li>它运行<strong>同一个时间</strong> <strong>多个事务</strong> 对<strong>同一个数据集</strong>进行<strong>读写操作</strong></li><li>同时防止数据不一致和其他问题</li></ul><h1 id="MVCC的实现机制"><a href="#MVCC的实现机制" class="headerlink" title="MVCC的实现机制"></a>MVCC的实现机制</h1><h2 id="隐藏字段和undo-log"><a href="#隐藏字段和undo-log" class="headerlink" title="隐藏字段和undo log"></a>隐藏字段和undo log</h2><ul><li>在一行数据中 有两个隐藏字段 一个是版本号 一个是回滚指针  </li><li>多版本链表（Multi-Version List）来存储数据。每个数据⾏都会 有⼀个多版本链表，其中存储着该⾏数据的所有历史版本</li><li>每次修改数据 版本号会自增  回滚指针指向上一个版本数据</li><li>链表头存放最新的数据 链表尾存放的是最早的数据</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159369.png" alt="image-20240509114607417"></p><h2 id="当前读和快照度"><a href="#当前读和快照度" class="headerlink" title="当前读和快照度"></a>当前读和快照度</h2><ul><li>当前读：读的时候加锁 这样别的事务无法修改 读到的是最新的数据 但是读写互斥</li><li>快照度：读的时候不加锁 读的是快照版本 可能不是最新的数据 读写不互斥 能够并发执行</li></ul><h2 id="readView读视图"><a href="#readView读视图" class="headerlink" title="readView读视图"></a>readView读视图</h2><h3 id="什么是readView"><a href="#什么是readView" class="headerlink" title="什么是readView?"></a>什么是readView?</h3><p>readView是记录当前未提交事务的id 也是MVCC读取数据的依据</p><p>如图所示：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159123.png" alt="image-20240509115901920"></p><h3 id="ReadView属性："><a href="#ReadView属性：" class="headerlink" title="ReadView属性："></a>ReadView属性：</h3><ol><li>未提交事务id</li><li>最小事务id</li><li>最大事务id+1</li><li>当前事务id</li></ol><h2 id="MVCC执行过程"><a href="#MVCC执行过程" class="headerlink" title="MVCC执行过程"></a>MVCC执行过程</h2><p>通过内部定义的一些规则 将多版本链表（Multi-Version List）中的版本号进行比对 最后读到是复合规则的版本号</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091209834.png" alt="file_1715227737714_457"></p><h3 id="过程（RC级别）："><a href="#过程（RC级别）：" class="headerlink" title="过程（RC级别）："></a>过程（RC级别）：</h3><ol><li><p>在查询时获取读视图</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217835.png" alt="image-20240509121030345"></p></li><li><p>将版本号放入规则匹配 从最新的版本开始：</p><ul><li>将4带进去</li><li>4！&#x3D;5</li><li>4！&lt;3</li><li>4！&gt;6</li><li>4在3和6之间 但是4在活跃id集合中{3,4,5}</li><li>结果： 4中的数据不符合</li><li>将3放进去重新匹配</li></ul></li><li><p>经过匹配找到复合的版本数据 最后只有2这个版本复合 所以只能读到2的数据</p></li><li><p>同理 下一个读视图 </p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217373.png" alt="image-20240509121741140"></p></li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091218861.png" alt="image-20240509121821879"></p><h2 id="RC级别和RR级别"><a href="#RC级别和RR级别" class="headerlink" title="RC级别和RR级别"></a>RC级别和RR级别</h2><ul><li>RC级别：每次查询生成一个读视图</li><li>RR级别：复用第一次查询的读视图</li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 数据库 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>数据库主从同步原理</title>
+      <link href="/2024/05/09/08-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/"/>
+      <url>/2024/05/09/08-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/</url>
+      
+        <content type="html"><![CDATA[<h1 id="数据库主从同步原理"><a href="#数据库主从同步原理" class="headerlink" title="数据库主从同步原理"></a>数据库主从同步原理</h1><ul><li><p>数据库主从同步原理指的是：将主数据库同步到副数据库的意思</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091230573.png" alt="image-20240509123024478"></p></li></ul><h2 id="实现方式："><a href="#实现方式：" class="headerlink" title="实现方式："></a>实现方式：</h2><p>binlog日志：</p><p>binlog日志是MySQL中的一个二进制文件 里面记录了数据库所有的DDL和DML</p><p>具体：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091240080.png" alt="image-20240509123242187"></p><p>过程：</p><ol><li>Master 主库在事务提交时，会把数据变更记录在二进制日志文件 Binlog 中。</li><li>从库读取主库的二进制日志文件 Binlog ，写入到从库的中继日志 Relay Log 。</li><li>slave重做中继日志中的事件，将改变反映它自己的数据，</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 数据库 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Sql执行很慢怎么分析</title>
       <link href="/2024/05/08/01-Sql%E6%89%A7%E8%A1%8C%E5%BE%88%E6%85%A2%E6%80%8E%E4%B9%88%E5%88%86%E6%9E%90/"/>
       <url>/2024/05/08/01-Sql%E6%89%A7%E8%A1%8C%E5%BE%88%E6%85%A2%E6%80%8E%E4%B9%88%E5%88%86%E6%9E%90/</url>
@@ -229,31 +279,6 @@
     
     
     <entry>
-      <title>JSON无法反序列化</title>
-      <link href="/2024/04/29/day14-JSON%E6%97%A0%E6%B3%95%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"/>
-      <url>/2024/04/29/day14-JSON%E6%97%A0%E6%B3%95%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</url>
-      
-        <content type="html"><![CDATA[<h1 id="JSON无法反序列化"><a href="#JSON无法反序列化" class="headerlink" title="JSON无法反序列化"></a>JSON无法反序列化</h1><h2 id="描述："><a href="#描述：" class="headerlink" title="描述："></a>描述：</h2><p><strong>JSON parse error: Cannot deserialize value of type</strong></p><h3 id="具体："><a href="#具体：" class="headerlink" title="具体："></a>具体：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">message: &quot;JSON parse error: Cannot deserialize value of type `java.util.Date` </span><br><span class="line">from String \&quot;2022-07-13T16:00:00.000Z\&quot;: not a valid representation </span><br><span class="line">(error: Failed to parse Date value &#x27;2022-07-13T16:00:00.000Z&#x27;: Unparseable date: \&quot;2022-07-13T16:00:00.000Z\&quot;); </span><br><span class="line">nested exception is com.fasterxml.jackson.databind.exc.InvalidFormatException: </span><br><span class="line">Cannot deserialize value of type `java.util.Date` from String \&quot;2022-07-13T16:00:00.000Z\&quot;: </span><br><span class="line">not a valid representation (error: Failed to parse Date value &#x27;2022-07-13T16:00:00.000Z&#x27;:</span><br><span class="line"> Unparseable date: \&quot;2022-07-13T16:00:00.000Z\&quot;)\n at [Source: (PushbackInputStream); line: 1, column: 255]</span><br><span class="line">  (through reference chain: com.lanren312.ClassReq[\&quot;startTime\&quot;])&quot;</span><br><span class="line"></span><br></pre></td></tr></table></figure><p>解决方法：</p><p>在相关字段加上：    <strong>@JsonFormat(locale&#x3D;”zh”, timezone&#x3D;”GMT+8”, pattern&#x3D;”yyyy-MM-dd”)</strong></p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@JsonFormat(locale=&quot;zh&quot;, timezone=&quot;GMT+8&quot;, pattern=&quot;yyyy-MM-dd&quot;)</span></span><br><span class="line"><span class="keyword">private</span> Date expireTime;</span><br></pre></td></tr></table></figure>]]></content>
-      
-      
-      <categories>
-          
-          <category> 其他 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> 其他 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Redis分布式锁的实现</title>
       <link href="/2024/04/29/day11-Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0/"/>
       <url>/2024/04/29/day11-Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0/</url>
@@ -271,6 +296,31 @@
         <tags>
             
             <tag> Redis </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>JSON无法反序列化</title>
+      <link href="/2024/04/29/day14-JSON%E6%97%A0%E6%B3%95%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/"/>
+      <url>/2024/04/29/day14-JSON%E6%97%A0%E6%B3%95%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/</url>
+      
+        <content type="html"><![CDATA[<h1 id="JSON无法反序列化"><a href="#JSON无法反序列化" class="headerlink" title="JSON无法反序列化"></a>JSON无法反序列化</h1><h2 id="描述："><a href="#描述：" class="headerlink" title="描述："></a>描述：</h2><p><strong>JSON parse error: Cannot deserialize value of type</strong></p><h3 id="具体："><a href="#具体：" class="headerlink" title="具体："></a>具体：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">message: &quot;JSON parse error: Cannot deserialize value of type `java.util.Date` </span><br><span class="line">from String \&quot;2022-07-13T16:00:00.000Z\&quot;: not a valid representation </span><br><span class="line">(error: Failed to parse Date value &#x27;2022-07-13T16:00:00.000Z&#x27;: Unparseable date: \&quot;2022-07-13T16:00:00.000Z\&quot;); </span><br><span class="line">nested exception is com.fasterxml.jackson.databind.exc.InvalidFormatException: </span><br><span class="line">Cannot deserialize value of type `java.util.Date` from String \&quot;2022-07-13T16:00:00.000Z\&quot;: </span><br><span class="line">not a valid representation (error: Failed to parse Date value &#x27;2022-07-13T16:00:00.000Z&#x27;:</span><br><span class="line"> Unparseable date: \&quot;2022-07-13T16:00:00.000Z\&quot;)\n at [Source: (PushbackInputStream); line: 1, column: 255]</span><br><span class="line">  (through reference chain: com.lanren312.ClassReq[\&quot;startTime\&quot;])&quot;</span><br><span class="line"></span><br></pre></td></tr></table></figure><p>解决方法：</p><p>在相关字段加上：    <strong>@JsonFormat(locale&#x3D;”zh”, timezone&#x3D;”GMT+8”, pattern&#x3D;”yyyy-MM-dd”)</strong></p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@JsonFormat(locale=&quot;zh&quot;, timezone=&quot;GMT+8&quot;, pattern=&quot;yyyy-MM-dd&quot;)</span></span><br><span class="line"><span class="keyword">private</span> Date expireTime;</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> 其他 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 其他 </tag>
             
         </tags>
       
@@ -379,31 +429,6 @@
     
     
     <entry>
-      <title>Redis K值序列化问题：</title>
-      <link href="/2024/04/29/day8-Redis%20K%E5%80%BC%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/"/>
-      <url>/2024/04/29/day8-Redis%20K%E5%80%BC%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/</url>
-      
-        <content type="html"><![CDATA[<h1 id="Redis-K值序列化问题："><a href="#Redis-K值序列化问题：" class="headerlink" title="Redis K值序列化问题："></a>Redis K值序列化问题：</h1><h2 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h2><p>java 已经连接上Redis 但是添加数据时 K值会自动添加序列化</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qqf.friend.service;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qqf.friend.model.request.UserLoginRequest;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.junit.runner.RunWith;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.test.context.SpringBootTest;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.RedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.ValueOperations;</span><br><span class="line"><span class="keyword">import</span> org.springframework.test.context.junit4.SpringRunner;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.annotation.Resource;</span><br><span class="line"></span><br><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="meta">@RunWith(SpringRunner.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> RedisTemplate redisTemplate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span>  <span class="title function_">test</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="type">ValueOperations</span> <span class="variable">valueOperations</span> <span class="operator">=</span> redisTemplate.opsForValue();</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfString&quot;</span>,<span class="string">&quot;qqfString&quot;</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfInt&quot;</span>,<span class="number">666</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfDouble&quot;</span>,<span class="number">0.666</span>);</span><br><span class="line">        UserLoginRequest userLoginRequest=<span class="keyword">new</span> <span class="title class_">UserLoginRequest</span>();</span><br><span class="line">        userLoginRequest.setUserAccount(<span class="string">&quot;RedisTest&quot;</span>);</span><br><span class="line">        userLoginRequest.setUserPassword(<span class="string">&quot;12345678&quot;</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfObj&quot;</span>,userLoginRequest);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="结果："><a href="#结果：" class="headerlink" title="结果："></a>结果：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071618734.png" alt="image-20240407111741763"></p><h2 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h2><p><strong>添加Redis配置</strong></p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qqf.friend.config;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Bean;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Configuration;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.connection.RedisConnectionFactory;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.RedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.serializer.StringRedisSerializer;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*告诉spring,运行的时候加载读取这个类*/</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> RedisTemplate&lt;String, Object&gt; <span class="title function_">redisTemplate</span><span class="params">(RedisConnectionFactory connectionFactory)</span> &#123;</span><br><span class="line">        RedisTemplate&lt;String, Object&gt; redisTemplate = <span class="keyword">new</span> <span class="title class_">RedisTemplate</span>&lt;String, Object&gt;();</span><br><span class="line">        redisTemplate.setKeySerializer(<span class="keyword">new</span> <span class="title class_">StringRedisSerializer</span>());</span><br><span class="line">        redisTemplate.setValueSerializer(<span class="keyword">new</span> <span class="title class_">JdkSerializationRedisSerializer</span>());</span><br><span class="line">        redisTemplate.setConnectionFactory(connectionFactory);</span><br><span class="line">        <span class="keyword">return</span> redisTemplate;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><h2 id="结果：-1"><a href="#结果：-1" class="headerlink" title="结果："></a>结果：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071618889.png" alt="image-20240407112624240"></p>]]></content>
-      
-      
-      <categories>
-          
-          <category> Redis </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> Redis </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Java判断对象中属性不为空的字段数量</title>
       <link href="/2024/04/29/day7-%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E4%B8%AD%E5%B1%9E%E6%80%A7%E4%B8%8D%E4%B8%BA%E7%A9%BA%E7%9A%84%E5%AD%97%E6%AE%B5%E6%95%B0%E9%87%8F/"/>
       <url>/2024/04/29/day7-%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E4%B8%AD%E5%B1%9E%E6%80%A7%E4%B8%8D%E4%B8%BA%E7%A9%BA%E7%9A%84%E5%AD%97%E6%AE%B5%E6%95%B0%E9%87%8F/</url>
@@ -421,6 +446,31 @@
         <tags>
             
             <tag> 其他 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Redis K值序列化问题：</title>
+      <link href="/2024/04/29/day8-Redis%20K%E5%80%BC%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/"/>
+      <url>/2024/04/29/day8-Redis%20K%E5%80%BC%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Redis-K值序列化问题："><a href="#Redis-K值序列化问题：" class="headerlink" title="Redis K值序列化问题："></a>Redis K值序列化问题：</h1><h2 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h2><p>java 已经连接上Redis 但是添加数据时 K值会自动添加序列化</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qqf.friend.service;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qqf.friend.model.request.UserLoginRequest;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.junit.runner.RunWith;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.test.context.SpringBootTest;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.RedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.ValueOperations;</span><br><span class="line"><span class="keyword">import</span> org.springframework.test.context.junit4.SpringRunner;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.annotation.Resource;</span><br><span class="line"></span><br><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="meta">@RunWith(SpringRunner.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> RedisTemplate redisTemplate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span>  <span class="title function_">test</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="type">ValueOperations</span> <span class="variable">valueOperations</span> <span class="operator">=</span> redisTemplate.opsForValue();</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfString&quot;</span>,<span class="string">&quot;qqfString&quot;</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfInt&quot;</span>,<span class="number">666</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfDouble&quot;</span>,<span class="number">0.666</span>);</span><br><span class="line">        UserLoginRequest userLoginRequest=<span class="keyword">new</span> <span class="title class_">UserLoginRequest</span>();</span><br><span class="line">        userLoginRequest.setUserAccount(<span class="string">&quot;RedisTest&quot;</span>);</span><br><span class="line">        userLoginRequest.setUserPassword(<span class="string">&quot;12345678&quot;</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfObj&quot;</span>,userLoginRequest);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="结果："><a href="#结果：" class="headerlink" title="结果："></a>结果：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071618734.png" alt="image-20240407111741763"></p><h2 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h2><p><strong>添加Redis配置</strong></p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qqf.friend.config;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Bean;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Configuration;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.connection.RedisConnectionFactory;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.RedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.serializer.StringRedisSerializer;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*告诉spring,运行的时候加载读取这个类*/</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> RedisTemplate&lt;String, Object&gt; <span class="title function_">redisTemplate</span><span class="params">(RedisConnectionFactory connectionFactory)</span> &#123;</span><br><span class="line">        RedisTemplate&lt;String, Object&gt; redisTemplate = <span class="keyword">new</span> <span class="title class_">RedisTemplate</span>&lt;String, Object&gt;();</span><br><span class="line">        redisTemplate.setKeySerializer(<span class="keyword">new</span> <span class="title class_">StringRedisSerializer</span>());</span><br><span class="line">        redisTemplate.setValueSerializer(<span class="keyword">new</span> <span class="title class_">JdkSerializationRedisSerializer</span>());</span><br><span class="line">        redisTemplate.setConnectionFactory(connectionFactory);</span><br><span class="line">        <span class="keyword">return</span> redisTemplate;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><h2 id="结果：-1"><a href="#结果：-1" class="headerlink" title="结果："></a>结果：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071618889.png" alt="image-20240407112624240"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Redis </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Redis </tag>
             
         </tags>
       
