@@ -4,23 +4,23 @@
   
     
     <entry>
-      <title>什么是MVCC</title>
-      <link href="/2024/05/09/07-MVCC/"/>
-      <url>/2024/05/09/07-MVCC/</url>
+      <title>Nginx启动前端项目</title>
+      <link href="/2024/05/10/day20-Nginx%E5%90%AF%E5%8A%A8%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE/"/>
+      <url>/2024/05/10/day20-Nginx%E5%90%AF%E5%8A%A8%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE/</url>
       
-        <content type="html"><![CDATA[<h1 id="什么是MVCC"><a href="#什么是MVCC" class="headerlink" title="什么是MVCC"></a>什么是MVCC</h1><ul><li>MVCC指的是<strong>多版本并发控制</strong></li><li>用于<strong>实现事务的并发控制</strong></li><li>它运行<strong>同一个时间</strong> <strong>多个事务</strong> 对<strong>同一个数据集</strong>进行<strong>读写操作</strong></li><li>同时防止数据不一致和其他问题</li></ul><h1 id="MVCC的实现机制"><a href="#MVCC的实现机制" class="headerlink" title="MVCC的实现机制"></a>MVCC的实现机制</h1><h2 id="隐藏字段和undo-log"><a href="#隐藏字段和undo-log" class="headerlink" title="隐藏字段和undo log"></a>隐藏字段和undo log</h2><ul><li>在一行数据中 有两个隐藏字段 一个是版本号 一个是回滚指针  </li><li>多版本链表（Multi-Version List）来存储数据。每个数据⾏都会 有⼀个多版本链表，其中存储着该⾏数据的所有历史版本</li><li>每次修改数据 版本号会自增  回滚指针指向上一个版本数据</li><li>链表头存放最新的数据 链表尾存放的是最早的数据</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159369.png" alt="image-20240509114607417"></p><h2 id="当前读和快照度"><a href="#当前读和快照度" class="headerlink" title="当前读和快照度"></a>当前读和快照度</h2><ul><li>当前读：读的时候加锁 这样别的事务无法修改 读到的是最新的数据 但是读写互斥</li><li>快照度：读的时候不加锁 读的是快照版本 可能不是最新的数据 读写不互斥 能够并发执行</li></ul><h2 id="readView读视图"><a href="#readView读视图" class="headerlink" title="readView读视图"></a>readView读视图</h2><h3 id="什么是readView"><a href="#什么是readView" class="headerlink" title="什么是readView?"></a>什么是readView?</h3><p>readView是记录当前未提交事务的id 也是MVCC读取数据的依据</p><p>如图所示：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159123.png" alt="image-20240509115901920"></p><h3 id="ReadView属性："><a href="#ReadView属性：" class="headerlink" title="ReadView属性："></a>ReadView属性：</h3><ol><li>未提交事务id</li><li>最小事务id</li><li>最大事务id+1</li><li>当前事务id</li></ol><h2 id="MVCC执行过程"><a href="#MVCC执行过程" class="headerlink" title="MVCC执行过程"></a>MVCC执行过程</h2><p>通过内部定义的一些规则 将多版本链表（Multi-Version List）中的版本号进行比对 最后读到是复合规则的版本号</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091209834.png" alt="file_1715227737714_457"></p><h3 id="过程（RC级别）："><a href="#过程（RC级别）：" class="headerlink" title="过程（RC级别）："></a>过程（RC级别）：</h3><ol><li><p>在查询时获取读视图</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217835.png" alt="image-20240509121030345"></p></li><li><p>将版本号放入规则匹配 从最新的版本开始：</p><ul><li>将4带进去</li><li>4！&#x3D;5</li><li>4！&lt;3</li><li>4！&gt;6</li><li>4在3和6之间 但是4在活跃id集合中{3,4,5}</li><li>结果： 4中的数据不符合</li><li>将3放进去重新匹配</li></ul></li><li><p>经过匹配找到复合的版本数据 最后只有2这个版本复合 所以只能读到2的数据</p></li><li><p>同理 下一个读视图 </p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217373.png" alt="image-20240509121741140"></p></li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091218861.png" alt="image-20240509121821879"></p><h2 id="RC级别和RR级别"><a href="#RC级别和RR级别" class="headerlink" title="RC级别和RR级别"></a>RC级别和RR级别</h2><ul><li>RC级别：每次查询生成一个读视图</li><li>RR级别：复用第一次查询的读视图</li></ul>]]></content>
+        <content type="html"><![CDATA[<h1 id="Nginx启动前端项目"><a href="#Nginx启动前端项目" class="headerlink" title="Nginx启动前端项目"></a>Nginx启动前端项目</h1><p>Nginx简单来说 就相当于启动前端的服务器  可以理解为java后端对应有一个Tocat 那么前端就有一个Nginx</p><p>那么Nginx如何启动前端项目呢</p><h2 id="Nginx启动命令"><a href="#Nginx启动命令" class="headerlink" title="Nginx启动命令"></a>Nginx启动命令</h2><p>1.进入到nginx文件夹</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405101541072.png" alt="image-20240510154130824"></p><ul><li>注意：路径不能有中文</li></ul><p>2.在路径输入cmd进入控制台</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102247436.png" alt="image-20240510154324596"></p><p>3.输入启动命令</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx.exe</span><br></pre></td></tr></table></figure><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102247128.png" alt="image-20240510154423163"></p><p>4.在网址输入localhost:8080（默认） 我这里设置是90了</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102247390.png" alt="image-20240510154629884"></p><h2 id="Nginx结束命令"><a href="#Nginx结束命令" class="headerlink" title="Nginx结束命令"></a>Nginx结束命令</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -s stop</span><br></pre></td></tr></table></figure><ul><li>注意：如果你启动了前一个nginx项目 你不关掉的话 那么再启动一个nginx项目 还是原来的 除非他们端口号不一样</li></ul><h2 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h2><p><a href="https://blog.csdn.net/Tel_17674647975/article/details/126300128?ops_request_misc=%7B%22request_id%22:%22171532650616800225512571%22,%22scm%22:%2220140713.130102334..%22%7D&request_id=171532650616800225512571&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_click~default-2-126300128-null-null.142%5Ev100%5Epc_search_result_base9&utm_term=nginx%E5%90%AF%E5%8A%A8&spm=1018.2226.3001.4187">三种启动nginx.exe的方法_nginx启动-CSDN博客</a></p>]]></content>
       
       
       <categories>
           
-          <category> 数据库 </category>
+          <category> 编程日记 </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> 数据库 </tag>
+            <tag> 编程日记 </tag>
             
         </tags>
       
@@ -54,11 +54,11 @@
     
     
     <entry>
-      <title>Sql执行很慢怎么分析</title>
-      <link href="/2024/05/08/01-Sql%E6%89%A7%E8%A1%8C%E5%BE%88%E6%85%A2%E6%80%8E%E4%B9%88%E5%88%86%E6%9E%90/"/>
-      <url>/2024/05/08/01-Sql%E6%89%A7%E8%A1%8C%E5%BE%88%E6%85%A2%E6%80%8E%E4%B9%88%E5%88%86%E6%9E%90/</url>
+      <title>什么是MVCC</title>
+      <link href="/2024/05/09/07-MVCC/"/>
+      <url>/2024/05/09/07-MVCC/</url>
       
-        <content type="html"><![CDATA[<h1 id="Sql执行很慢怎么分析"><a href="#Sql执行很慢怎么分析" class="headerlink" title="Sql执行很慢怎么分析"></a>Sql执行很慢怎么分析</h1><p>使用Mysql自带的分析工具EXPLAIN</p><h3 id><a href="#" class="headerlink" title></a><img src="https://gitee.com/antidote-git/photo/raw/master/img/202404262355128.png" alt="image-20240424133633911"></h3><p><strong>可以使用key字段和key_len查看是否命中索引</strong> （主要是验证索引是否失效）</p><p><strong>可以通过type字段 查看是否还有优化空间</strong>（主要是看这个）</p><p><img src="/2024/05/08/01-Sql%E6%89%A7%E8%A1%8C%E5%BE%88%E6%85%A2%E6%80%8E%E4%B9%88%E5%88%86%E6%9E%90/Users\Atdote\AppData\Roaming\Typora\typora-user-images\image-20240424133754645.png" alt="image-20240424133754645"></p><p><img src="https://gitee.com/antidote-git/photo/raw/master/img/202404262355907.png" alt="image-20240424133816607"></p><p>尽量不要让sql语句是all或者index</p>]]></content>
+        <content type="html"><![CDATA[<h1 id="什么是MVCC"><a href="#什么是MVCC" class="headerlink" title="什么是MVCC"></a>什么是MVCC</h1><ul><li>MVCC指的是<strong>多版本并发控制</strong></li><li>用于<strong>实现事务的并发控制</strong></li><li>它运行<strong>同一个时间</strong> <strong>多个事务</strong> 对<strong>同一个数据集</strong>进行<strong>读写操作</strong></li><li>同时防止数据不一致和其他问题</li></ul><h1 id="MVCC的实现机制"><a href="#MVCC的实现机制" class="headerlink" title="MVCC的实现机制"></a>MVCC的实现机制</h1><h2 id="隐藏字段和undo-log"><a href="#隐藏字段和undo-log" class="headerlink" title="隐藏字段和undo log"></a>隐藏字段和undo log</h2><ul><li>在一行数据中 有两个隐藏字段 一个是版本号 一个是回滚指针  </li><li>多版本链表（Multi-Version List）来存储数据。每个数据⾏都会 有⼀个多版本链表，其中存储着该⾏数据的所有历史版本</li><li>每次修改数据 版本号会自增  回滚指针指向上一个版本数据</li><li>链表头存放最新的数据 链表尾存放的是最早的数据</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159369.png" alt="image-20240509114607417"></p><h2 id="当前读和快照度"><a href="#当前读和快照度" class="headerlink" title="当前读和快照度"></a>当前读和快照度</h2><ul><li>当前读：读的时候加锁 这样别的事务无法修改 读到的是最新的数据 但是读写互斥</li><li>快照度：读的时候不加锁 读的是快照版本 可能不是最新的数据 读写不互斥 能够并发执行</li></ul><h2 id="readView读视图"><a href="#readView读视图" class="headerlink" title="readView读视图"></a>readView读视图</h2><h3 id="什么是readView"><a href="#什么是readView" class="headerlink" title="什么是readView?"></a>什么是readView?</h3><p>当事务读取数据时 会生成一个读视图  readView是记录当前未提交事务的id 也是MVCC读取数据的依据</p><p>如图所示：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159123.png" alt="image-20240509115901920"></p><h3 id="ReadView属性："><a href="#ReadView属性：" class="headerlink" title="ReadView属性："></a>ReadView属性：</h3><ol><li>未提交事务id</li><li>最小事务id</li><li>最大事务id+1</li><li>当前事务id</li></ol><h2 id="MVCC执行过程"><a href="#MVCC执行过程" class="headerlink" title="MVCC执行过程"></a>MVCC执行过程</h2><p>通过内部定义的一些规则 将多版本链表（Multi-Version List）中的版本号进行比对 最后读到是复合规则的版本号</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091209834.png" alt="file_1715227737714_457"></p><h3 id="过程（RC级别）："><a href="#过程（RC级别）：" class="headerlink" title="过程（RC级别）："></a>过程（RC级别）：</h3><ol><li><p>在查询时获取读视图</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217835.png" alt="image-20240509121030345"></p></li><li><p>将版本号放入规则匹配 从最新的版本开始：</p><ul><li>将4带进去</li><li>4！&#x3D;5</li><li>4！&lt;3</li><li>4！&gt;6</li><li>4在3和6之间 但是4在活跃id集合中{3,4,5}</li><li>结果： 4中的数据不符合</li><li>将3放进去重新匹配</li></ul></li><li><p>经过匹配找到复合的版本数据 最后只有2这个版本复合 所以只能读到2的数据</p></li><li><p>同理 下一个读视图 </p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217373.png" alt="image-20240509121741140"></p></li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091218861.png" alt="image-20240509121821879"></p><h2 id="RC级别和RR级别"><a href="#RC级别和RR级别" class="headerlink" title="RC级别和RR级别"></a>RC级别和RR级别</h2><ul><li>RC级别：每次查询生成一个读视图</li><li>RR级别：复用第一次查询的读视图</li></ul>]]></content>
       
       
       <categories>
@@ -79,11 +79,36 @@
     
     
     <entry>
-      <title>undo log和redo log的区别</title>
-      <link href="/2024/05/08/06-undo%20log%E5%92%8Credo%20log%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
-      <url>/2024/05/08/06-undo%20log%E5%92%8Credo%20log%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+      <title>简历项目模块可以深挖的点</title>
+      <link href="/2024/05/09/day19-%E7%AE%80%E5%8E%86%E9%A1%B9%E7%9B%AE%E6%A8%A1%E5%9D%97%E5%8F%AF%E4%BB%A5%E6%B7%B1%E6%8C%96%E7%9A%84%E7%82%B9/"/>
+      <url>/2024/05/09/day19-%E7%AE%80%E5%8E%86%E9%A1%B9%E7%9B%AE%E6%A8%A1%E5%9D%97%E5%8F%AF%E4%BB%A5%E6%B7%B1%E6%8C%96%E7%9A%84%E7%82%B9/</url>
       
-        <content type="html"><![CDATA[<h1 id="undo-log和redo-log的区别"><a href="#undo-log和redo-log的区别" class="headerlink" title="undo log和redo log的区别"></a>undo log和redo log的区别</h1><p>Undo log”（撤销日志）和 “redo log”（重做日志）是数据库系统中常见的两种日志类型，用于确保数据库的一致性和持久性。它们的主要区别在于它们的作用和用途：</p><ol><li><strong>Undo Log（回滚日志）</strong>：<ul><li>撤销日志记录了事务执行过程中对数据库的修改操作，以便在事务回滚或发生错误时可以将数据库<strong>恢复到之前的状态</strong>。</li><li>撤销日志中记录了<strong>每个事务所做的修改的逆操作</strong>，因此可以用来撤销事务的影响。<strong>（逻辑变化）</strong></li><li>撤销日志通常用于实现数据库的 ACID 特性中的<strong>原子性</strong></li></ul></li><li><strong>Redo Log（重做日志）</strong>：<ul><li>重做日志记录了数据库的每个事务所做的修改操作，以便<strong>在数据库崩溃或意外关闭后可以重做这些修改</strong>，确保数据的完整性和一致性。（物理变化）</li><li>重做日志中记录了事务对数据库的修改操作，但记录的是修改的结果而不是具体的操作过程，因此可以用来重新执行事务的影响。</li><li>重做日志通常用于实现数据库的 ACID 特性中的 <strong>“Durability”（持久性）</strong>，确保即使在数据库<strong>发生故障时</strong>，也能够<strong>恢复数据并保持一致性。</strong></li></ul></li></ol>]]></content>
+        <content type="html"><![CDATA[<h1 id="简历项目模块可以深挖的点"><a href="#简历项目模块可以深挖的点" class="headerlink" title="简历项目模块可以深挖的点"></a>简历项目模块可以深挖的点</h1><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102248043.png" alt="image-20240509141830252"></p><p><strong>可以深挖这些模块 参考多个项目相同模块的不同设计 找到他们的不同优缺点</strong></p><p>例如：</p><p>权限认证：</p><ol><li>功能实现<ol><li>业务功能实现<ul><li>账号密码登录</li><li>二维码登录</li><li>手机短信登录</li><li>用户、角色、权限管理和分配</li></ul></li><li>技术方案支持<ul><li>RBAC模型</li><li>Spring Security</li><li>Apeche Shiro</li></ul></li></ol></li><li>常见问题<ul><li>token刷新</li><li>加密和解密</li><li>Xss放跨站攻击</li></ul></li><li><strong>权限系统设计（架构必学）</strong><ul><li>可拓展性</li><li>高可用性</li><li>通用性</li></ul></li></ol><p>​</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 编程日记 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 编程日记 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Sql执行很慢怎么分析</title>
+      <link href="/2024/05/08/01-Sql%E6%89%A7%E8%A1%8C%E5%BE%88%E6%85%A2%E6%80%8E%E4%B9%88%E5%88%86%E6%9E%90/"/>
+      <url>/2024/05/08/01-Sql%E6%89%A7%E8%A1%8C%E5%BE%88%E6%85%A2%E6%80%8E%E4%B9%88%E5%88%86%E6%9E%90/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Sql执行很慢怎么分析"><a href="#Sql执行很慢怎么分析" class="headerlink" title="Sql执行很慢怎么分析"></a>Sql执行很慢怎么分析</h1><p>使用Mysql自带的分析工具EXPLAIN</p><h3 id><a href="#" class="headerlink" title></a><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102314467.png" alt="image-20240424133633911"></h3><p><strong>可以使用key字段和key_len查看是否命中索引</strong> （主要是验证索引是否失效）</p><p><strong>可以通过type字段 查看是否还有优化空间</strong>（主要是看这个）</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102315192.png" alt="image-20240424133754645"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102315451.png" alt="image-20240424133816607"></p><p>尽量不要让sql语句是all或者index</p>]]></content>
       
       
       <categories>
@@ -109,6 +134,31 @@
       <url>/2024/05/08/05-%E5%B9%B6%E5%8F%91%E4%BA%8B%E5%8A%A1%E9%97%AE%E9%A2%98%EF%BC%9A%E8%84%8F%E8%AF%BB%E3%80%81%E4%B8%8D%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB%E3%80%81%E5%B9%BB%E8%AF%BB/</url>
       
         <content type="html"><![CDATA[<h1 id="并发事务问题：脏读、不可重复读、幻读"><a href="#并发事务问题：脏读、不可重复读、幻读" class="headerlink" title="并发事务问题：脏读、不可重复读、幻读"></a>并发事务问题：脏读、不可重复读、幻读</h1><table><thead><tr><th align="left">问题</th><th align="left">描述</th></tr></thead><tbody><tr><td align="left">脏读</td><td align="left">一个事务读到另外一个事务还没有提交的数据。</td></tr><tr><td align="left">不可重复读</td><td align="left">一个事务先后读取同一条记录，但两次读取的数据不同，称之为不可重复读</td></tr><tr><td align="left">幻读</td><td align="left">一个事务按照条件查询数据时，没有对应的数据行，但是在插入数据时，又发现这行数据已经存在，好像出现了”幻影”</td></tr></tbody></table><h2 id="脏读"><a href="#脏读" class="headerlink" title="脏读:"></a>脏读:</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405081628334.png" alt="image-20240508161022620"></p><h3 id="过程："><a href="#过程：" class="headerlink" title="过程："></a>过程：</h3><ol><li>事务A查询id为1的数据</li><li>事务B查询id为1的数据</li><li>事务A更新了id为1的数据</li></ol><h3 id="结果："><a href="#结果：" class="headerlink" title="结果："></a>结果：</h3><p>事务B读到了事务A还没更新id的数据</p><h2 id="不可重复读："><a href="#不可重复读：" class="headerlink" title="不可重复读："></a>不可重复读：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405081628660.png" alt="image-20240508161311823"></p><h3 id="过程：-1"><a href="#过程：-1" class="headerlink" title="过程："></a>过程：</h3><ol><li>事务A查询id为1的数据</li><li>事务B更新了id为1的数据</li><li>事务A又查询了id为1的数据（此时查询的是事务B修改了的数据）</li></ol><h3 id="结果：-1"><a href="#结果：-1" class="headerlink" title="结果："></a>结果：</h3><p>事务A两次读取的数据不一样</p><h2 id="幻读："><a href="#幻读：" class="headerlink" title="幻读："></a>幻读：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405081628575.png" alt="image-20240508161838495"></p><h3 id="过程：-2"><a href="#过程：-2" class="headerlink" title="过程："></a>过程：</h3><ol><li>事务A查询id为1的数据（此时数据为空）</li><li>事务B添加了一条id为1的数据 并且已经提交</li><li>事务A添加id为1的数据（此时会报错）</li><li>事务A再次查询id为1的数据（由于解决了不可重复读导致两次查询的数据一样——都为空）</li></ol><h3 id="结果：-2"><a href="#结果：-2" class="headerlink" title="结果："></a>结果：</h3><p>由于解决了不可重复读导致两次查询的数据一样——都为空</p><h2 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405081628124.png" alt="image-20240508162324472"></p><ul><li>注意：事务隔离级别越高 性能越差</li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 数据库 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>undo log和redo log的区别</title>
+      <link href="/2024/05/08/06-undo%20log%E5%92%8Credo%20log%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
+      <url>/2024/05/08/06-undo%20log%E5%92%8Credo%20log%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+      
+        <content type="html"><![CDATA[<h1 id="undo-log和redo-log的区别"><a href="#undo-log和redo-log的区别" class="headerlink" title="undo log和redo log的区别"></a>undo log和redo log的区别</h1><p>Undo log”（撤销日志）和 “redo log”（重做日志）是数据库系统中常见的两种日志类型，用于确保数据库的一致性和持久性。它们的主要区别在于它们的作用和用途：</p><ol><li><strong>Undo Log（回滚日志）</strong>：<ul><li>撤销日志记录了事务执行过程中对数据库的修改操作，以便在事务回滚或发生错误时可以将数据库<strong>恢复到之前的状态</strong>。</li><li>撤销日志中记录了<strong>每个事务所做的修改的逆操作</strong>，因此可以用来撤销事务的影响。<strong>（逻辑变化）</strong></li><li>撤销日志通常用于实现数据库的 ACID 特性中的<strong>原子性</strong></li></ul></li><li><strong>Redo Log（重做日志）</strong>：<ul><li>重做日志记录了数据库的每个事务所做的修改操作，以便<strong>在数据库崩溃或意外关闭后可以重做这些修改</strong>，确保数据的完整性和一致性。<strong>（物理变化）</strong></li><li>重做日志中记录了事务对数据库的修改操作，但<strong>记录的是修改的结果而不是具体的操作过程</strong>，因此可以用来重新执行事务的影响。</li><li>重做日志通常用于实现数据库的 ACID 特性中的 <strong>“Durability”（持久性）</strong>，确保即使在数据库<strong>发生故障时</strong>，也能够<strong>恢复数据并保持一致性。</strong></li></ul></li></ol>]]></content>
       
       
       <categories>
@@ -429,31 +479,6 @@
     
     
     <entry>
-      <title>Redis K值序列化问题：</title>
-      <link href="/2024/04/29/day8-Redis%20K%E5%80%BC%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/"/>
-      <url>/2024/04/29/day8-Redis%20K%E5%80%BC%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/</url>
-      
-        <content type="html"><![CDATA[<h1 id="Redis-K值序列化问题："><a href="#Redis-K值序列化问题：" class="headerlink" title="Redis K值序列化问题："></a>Redis K值序列化问题：</h1><h2 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h2><p>java 已经连接上Redis 但是添加数据时 K值会自动添加序列化</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qqf.friend.service;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qqf.friend.model.request.UserLoginRequest;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.junit.runner.RunWith;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.test.context.SpringBootTest;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.RedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.ValueOperations;</span><br><span class="line"><span class="keyword">import</span> org.springframework.test.context.junit4.SpringRunner;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.annotation.Resource;</span><br><span class="line"></span><br><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="meta">@RunWith(SpringRunner.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> RedisTemplate redisTemplate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span>  <span class="title function_">test</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="type">ValueOperations</span> <span class="variable">valueOperations</span> <span class="operator">=</span> redisTemplate.opsForValue();</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfString&quot;</span>,<span class="string">&quot;qqfString&quot;</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfInt&quot;</span>,<span class="number">666</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfDouble&quot;</span>,<span class="number">0.666</span>);</span><br><span class="line">        UserLoginRequest userLoginRequest=<span class="keyword">new</span> <span class="title class_">UserLoginRequest</span>();</span><br><span class="line">        userLoginRequest.setUserAccount(<span class="string">&quot;RedisTest&quot;</span>);</span><br><span class="line">        userLoginRequest.setUserPassword(<span class="string">&quot;12345678&quot;</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfObj&quot;</span>,userLoginRequest);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="结果："><a href="#结果：" class="headerlink" title="结果："></a>结果：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071618734.png" alt="image-20240407111741763"></p><h2 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h2><p><strong>添加Redis配置</strong></p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qqf.friend.config;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Bean;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Configuration;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.connection.RedisConnectionFactory;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.RedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.serializer.StringRedisSerializer;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*告诉spring,运行的时候加载读取这个类*/</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> RedisTemplate&lt;String, Object&gt; <span class="title function_">redisTemplate</span><span class="params">(RedisConnectionFactory connectionFactory)</span> &#123;</span><br><span class="line">        RedisTemplate&lt;String, Object&gt; redisTemplate = <span class="keyword">new</span> <span class="title class_">RedisTemplate</span>&lt;String, Object&gt;();</span><br><span class="line">        redisTemplate.setKeySerializer(<span class="keyword">new</span> <span class="title class_">StringRedisSerializer</span>());</span><br><span class="line">        redisTemplate.setValueSerializer(<span class="keyword">new</span> <span class="title class_">JdkSerializationRedisSerializer</span>());</span><br><span class="line">        redisTemplate.setConnectionFactory(connectionFactory);</span><br><span class="line">        <span class="keyword">return</span> redisTemplate;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><h2 id="结果：-1"><a href="#结果：-1" class="headerlink" title="结果："></a>结果：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071618889.png" alt="image-20240407112624240"></p>]]></content>
-      
-      
-      <categories>
-          
-          <category> Redis </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> Redis </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Java判断对象中属性不为空的字段数量</title>
       <link href="/2024/04/29/day7-%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E4%B8%AD%E5%B1%9E%E6%80%A7%E4%B8%8D%E4%B8%BA%E7%A9%BA%E7%9A%84%E5%AD%97%E6%AE%B5%E6%95%B0%E9%87%8F/"/>
       <url>/2024/04/29/day7-%E5%88%A4%E6%96%AD%E5%AF%B9%E8%B1%A1%E4%B8%AD%E5%B1%9E%E6%80%A7%E4%B8%8D%E4%B8%BA%E7%A9%BA%E7%9A%84%E5%AD%97%E6%AE%B5%E6%95%B0%E9%87%8F/</url>
@@ -471,6 +496,31 @@
         <tags>
             
             <tag> 其他 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Redis K值序列化问题：</title>
+      <link href="/2024/04/29/day8-Redis%20K%E5%80%BC%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/"/>
+      <url>/2024/04/29/day8-Redis%20K%E5%80%BC%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Redis-K值序列化问题："><a href="#Redis-K值序列化问题：" class="headerlink" title="Redis K值序列化问题："></a>Redis K值序列化问题：</h1><h2 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h2><p>java 已经连接上Redis 但是添加数据时 K值会自动添加序列化</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qqf.friend.service;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.qqf.friend.model.request.UserLoginRequest;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.junit.runner.RunWith;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.test.context.SpringBootTest;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.RedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.ValueOperations;</span><br><span class="line"><span class="keyword">import</span> org.springframework.test.context.junit4.SpringRunner;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.annotation.Resource;</span><br><span class="line"></span><br><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="meta">@RunWith(SpringRunner.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> RedisTemplate redisTemplate;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span>  <span class="title function_">test</span><span class="params">()</span>&#123;</span><br><span class="line">        <span class="type">ValueOperations</span> <span class="variable">valueOperations</span> <span class="operator">=</span> redisTemplate.opsForValue();</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfString&quot;</span>,<span class="string">&quot;qqfString&quot;</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfInt&quot;</span>,<span class="number">666</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfDouble&quot;</span>,<span class="number">0.666</span>);</span><br><span class="line">        UserLoginRequest userLoginRequest=<span class="keyword">new</span> <span class="title class_">UserLoginRequest</span>();</span><br><span class="line">        userLoginRequest.setUserAccount(<span class="string">&quot;RedisTest&quot;</span>);</span><br><span class="line">        userLoginRequest.setUserPassword(<span class="string">&quot;12345678&quot;</span>);</span><br><span class="line">        valueOperations.set(<span class="string">&quot;qqfObj&quot;</span>,userLoginRequest);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="结果："><a href="#结果：" class="headerlink" title="结果："></a>结果：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071618734.png" alt="image-20240407111741763"></p><h2 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h2><p><strong>添加Redis配置</strong></p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.qqf.friend.config;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Bean;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Configuration;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.connection.RedisConnectionFactory;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.core.RedisTemplate;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;</span><br><span class="line"><span class="keyword">import</span> org.springframework.data.redis.serializer.StringRedisSerializer;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*告诉spring,运行的时候加载读取这个类*/</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> RedisTemplate&lt;String, Object&gt; <span class="title function_">redisTemplate</span><span class="params">(RedisConnectionFactory connectionFactory)</span> &#123;</span><br><span class="line">        RedisTemplate&lt;String, Object&gt; redisTemplate = <span class="keyword">new</span> <span class="title class_">RedisTemplate</span>&lt;String, Object&gt;();</span><br><span class="line">        redisTemplate.setKeySerializer(<span class="keyword">new</span> <span class="title class_">StringRedisSerializer</span>());</span><br><span class="line">        redisTemplate.setValueSerializer(<span class="keyword">new</span> <span class="title class_">JdkSerializationRedisSerializer</span>());</span><br><span class="line">        redisTemplate.setConnectionFactory(connectionFactory);</span><br><span class="line">        <span class="keyword">return</span> redisTemplate;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><h2 id="结果：-1"><a href="#结果：-1" class="headerlink" title="结果："></a>结果：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071618889.png" alt="image-20240407112624240"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Redis </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Redis </tag>
             
         </tags>
       
@@ -542,6 +592,81 @@
           
       </categories>
       
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>什么是索引 索引的底层结构是什么</title>
+      <link href="/2024/04/26/02-%E4%BB%80%E4%B9%88%E6%98%AF%E7%B4%A2%E5%BC%95%20%E7%B4%A2%E5%BC%95%E7%9A%84%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84%E6%98%AF%E4%BB%80%E4%B9%88/"/>
+      <url>/2024/04/26/02-%E4%BB%80%E4%B9%88%E6%98%AF%E7%B4%A2%E5%BC%95%20%E7%B4%A2%E5%BC%95%E7%9A%84%E5%BA%95%E5%B1%82%E7%BB%93%E6%9E%84%E6%98%AF%E4%BB%80%E4%B9%88/</url>
+      
+        <content type="html"><![CDATA[<h1 id="什么是索引-索引的底层结构是什么"><a href="#什么是索引-索引的底层结构是什么" class="headerlink" title="什么是索引 索引的底层结构是什么"></a>什么是索引 索引的底层结构是什么</h1><h2 id="什么是索引？"><a href="#什么是索引？" class="headerlink" title="什么是索引？"></a>什么是索引？</h2><ul><li>索引(index)是帮助MySQL高效获取数据的数据结构(有序)</li><li>提高数据检索的效率，降低数据库的IO成本(不需要全表扫描)</li><li>通过索引列对数据进行排序，降低数据排序的成本，降低了CPU的消耗</li></ul><h2 id="索引的底层结构"><a href="#索引的底层结构" class="headerlink" title="索引的底层结构"></a>索引的底层结构</h2><p>MySQL的InnoDB引擎采用的B+树的数据结构来存储索引</p><p>B+树的优点：</p><ul><li>度数更多，路径更短</li><li>磁盘读写代价B+树更低，非叶子节点只存储指针，叶子阶段存储数据</li><li>B+树便于扫库和区间查询，叶子节点是一个双向链表</li></ul><h2 id="B-树-对比于其他树："><a href="#B-树-对比于其他树：" class="headerlink" title="B+树 对比于其他树："></a>B+树 对比于其他树：</h2><h3 id="B-树："><a href="#B-树：" class="headerlink" title="B+树："></a>B+树：</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102316350.png" alt="image-20240424135905792"></p><h3 id="B树"><a href="#B树" class="headerlink" title="B树:"></a>B树:</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102316740.png" alt="image-20240424135952546"></p><p>B树在于B+树的不同：</p><p>B树并不是把数据全部放在叶子节点 这样不利于区间查询  </p><h3 id="二叉搜索树："><a href="#二叉搜索树：" class="headerlink" title="二叉搜索树："></a>二叉搜索树：</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102316405.png" alt="image-20240424140323618"></p><p>左小右大 </p><p>二叉树的问题 可能会出现最坏二叉树的情况</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102316171.png" alt="image-20240424140421220"></p><h3 id="红黑树："><a href="#红黑树：" class="headerlink" title="红黑树："></a>红黑树：</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102316354.png" alt="image-20240424140520967"></p><p>解决二叉搜索树的最坏情况 但是由于红黑树的度数为2 所以如果数据量大 那么树的高度就会很高</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 数据库 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>什么是聚簇索引什么是非聚簇索引?</title>
+      <link href="/2024/04/26/04-%E7%B4%A2%E5%BC%95%E5%88%9B%E5%BB%BA%E5%8E%9F%E5%88%99%20%E4%B8%BA%E4%BD%95%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88/"/>
+      <url>/2024/04/26/04-%E7%B4%A2%E5%BC%95%E5%88%9B%E5%BB%BA%E5%8E%9F%E5%88%99%20%E4%B8%BA%E4%BD%95%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88/</url>
+      
+        <content type="html"><![CDATA[<h1 id="索引创建的原则"><a href="#索引创建的原则" class="headerlink" title="索引创建的原则"></a>索引创建的原则</h1><ul><li>针对于数据量较大，且查询比较频繁的表建立索引。   单表超过10万数据(增加用户体验)</li><li>针对于常作为查询条件(where)、排序(orderby)、分组(group by)操作的字段建立索引</li><li>尽量选择区分度高的列作为索引，尽量建立唯一索引，区分度越高，使用索引的效率越高。</li><li>如果是字符串类型的字段，字段的长度较长，可以针对于字段的特点，建立前缀索引（就是用字符串的前面几个字）。</li><li>尽量使用联合索引，减少单列索引，查询时，联合索引很多时候可以覆盖索引，节省存储空间，避免回表，提高查询效率。</li><li>要控制索引的数量，索引并不是多多益善，索引越多，维护索引结构的代价也就越大，会影响增删改的效率。</li></ul><h1 id="什么时候索引会失效"><a href="#什么时候索引会失效" class="headerlink" title="什么时候索引会失效"></a>什么时候索引会失效</h1><p><strong>name status address 为联合索引</strong></p><h2 id="正例"><a href="#正例" class="headerlink" title="正例"></a>正例</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318853.png" alt="image-20240424171618229"></p><h3 id="违反最左前缀法则"><a href="#违反最左前缀法则" class="headerlink" title="违反最左前缀法则"></a>违反最左前缀法则</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318866.png" alt="image-20240424171755606"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318026.png" alt="image-20240424171807925"></p><h3 id="范围查询右边的列，不能使用索引"><a href="#范围查询右边的列，不能使用索引" class="headerlink" title="范围查询右边的列，不能使用索引"></a>范围查询右边的列，不能使用索引</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318773.png" alt="image-20240424171841838"></p><p>status 是一个范围  status右边的列不会生效</p><h3 id="不要在索引列上进行运算操作，索引将失效"><a href="#不要在索引列上进行运算操作，索引将失效" class="headerlink" title="不要在索引列上进行运算操作，索引将失效"></a>不要在索引列上进行运算操作，索引将失效</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318773.png" alt="image-20240424172055613"></p><h3 id="字符串不加单引号，造成索引失效。"><a href="#字符串不加单引号，造成索引失效。" class="headerlink" title="字符串不加单引号，造成索引失效。"></a>字符串不加单引号，造成索引失效。</h3><h2 id><a href="#" class="headerlink" title></a><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318011.png" alt="image-20240424172132329"></h2><h3 id="以-开头的Like模糊查询，索引失效。"><a href="#以-开头的Like模糊查询，索引失效。" class="headerlink" title="以%开头的Like模糊查询，索引失效。"></a>以%开头的Like模糊查询，索引失效。</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318971.png" alt="image-20240424172232785"></p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol><li>违反最左前缀法则</li><li>范围查询右边的列，不能使用索引</li><li>不要在索引列上进行运算操作，索引将失效</li><li>字符串不加单引号，造成索引失效。(类型转换)</li><li>以%开头的Like模糊查询，索引失效。</li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318844.png" alt="image-20240424172355280"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 数据库 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>什么是聚簇索引什么是非聚簇索引?</title>
+      <link href="/2024/04/26/03-%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95%E3%80%81%E9%9D%9E%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95/"/>
+      <url>/2024/04/26/03-%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95%E3%80%81%E9%9D%9E%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95/</url>
+      
+        <content type="html"><![CDATA[<h1 id="什么是聚簇索引什么是非聚簇索引"><a href="#什么是聚簇索引什么是非聚簇索引" class="headerlink" title="什么是聚簇索引什么是非聚簇索引?"></a>什么是聚簇索引什么是非聚簇索引?</h1><h2 id="聚集索引-Clustered-Index"><a href="#聚集索引-Clustered-Index" class="headerlink" title="聚集索引(Clustered Index)"></a>聚集索引(Clustered Index)</h2><ul><li>必须有 且只能有一个（主键）</li><li>数据与索引放到一块，B+树的叶子节点保存了整行数据</li></ul><h4 id="聚集索引选取规则"><a href="#聚集索引选取规则" class="headerlink" title="聚集索引选取规则"></a>聚集索引选取规则</h4><ul><li>如果存在主键，主键索引就是聚集索引。</li><li>如果不存在主键，将使用第一个唯一(UNIQUE)索引作为聚集索引</li><li>如果表没有主键，或没有合适的唯一索引，则InnoDB会自动生成一个rowid作为隐藏的聚集索引</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317574.png" alt="image-20240424141405743"></p><p><strong>如图 在聚集索引的叶子结点存的是整行数据</strong></p><h2 id="二级索引-非聚簇索引"><a href="#二级索引-非聚簇索引" class="headerlink" title="二级索引(非聚簇索引)"></a>二级索引(非聚簇索引)</h2><ul><li>数据与索引分开存储，B+树的叶子节点保存对应的主键</li><li>可以存在多个</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317286.png" alt="image-20240424144105845"></p><p>二级索引的叶子结点存的数据为主键Id</p><h2 id="回表查询"><a href="#回表查询" class="headerlink" title="回表查询"></a>回表查询</h2><ul><li>通过二级索引找到对应的主键值，到聚集索引中查找整行数据，这个过程就是回表</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317121.png" alt="image-20240424143653014"></p><p>回表查询 指的是通过二级索引 找到主键 然后去聚集索引找到该行 </p><h2 id="什么是覆盖索引？"><a href="#什么是覆盖索引？" class="headerlink" title="什么是覆盖索引？"></a>什么是覆盖索引？</h2><ul><li>覆盖索引 指的是查询的字段在索引中都能找到 不需要回表</li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 数据库 </tag>
+            
+        </tags>
       
     </entry>
     
