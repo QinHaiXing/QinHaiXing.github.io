@@ -4,6 +4,306 @@
   
     
     <entry>
+      <title>HashMap实现原理</title>
+      <link href="/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB06-HashMap%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/"/>
+      <url>/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB06-HashMap%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</url>
+      
+        <content type="html"><![CDATA[<h1 id="HashMap实现原理"><a href="#HashMap实现原理" class="headerlink" title="HashMap实现原理"></a>HashMap实现原理</h1><p>HashMap的数据结构：底层使用hash表数据结构，即数组和（链表|红黑树）</p><ol><li>当我们put元素时，用利用key的hashCode来计算key在数组的下标</li><li>存储时，如果key相同，覆盖掉原来的key，如果key不同但是出现冲突，则存在链表或红黑树中</li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405221704041.png" alt="image-20240522170436354"></p><h2 id="HashMap的jdk1-7和jdk1-8有什么区别"><a href="#HashMap的jdk1-7和jdk1-8有什么区别" class="headerlink" title="HashMap的jdk1.7和jdk1.8有什么区别"></a>HashMap的jdk1.7和jdk1.8有什么区别</h2><ul><li>JDK1.8之前采用的是拉链法。拉链法:将链表和数组相结合。也就是说创建一个链表数组，数组中每一格就是一个链表。若遇到哈希冲突，则将冲突的值加到链表中即可。</li><li>jdk1.8在解决哈希冲突时有了较大的变化，当链表长度大于阈值(默认为8) 时并且数组长度达到64时，将链表转化为红黑树，以减少搜索时间。扩容 resize()时，红黑树拆分成的树的结点数小于等于临界值6个，则退化成链表</li></ul><h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><p>1.8之前没用红黑树，1.8之后用了红黑树</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>HashMap的put方法的具体流程</title>
+      <link href="/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB07-HashMap%E7%9A%84put%E6%96%B9%E6%B3%95%E7%9A%84%E5%85%B7%E4%BD%93%E6%B5%81%E7%A8%8B/"/>
+      <url>/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB07-HashMap%E7%9A%84put%E6%96%B9%E6%B3%95%E7%9A%84%E5%85%B7%E4%BD%93%E6%B5%81%E7%A8%8B/</url>
+      
+        <content type="html"><![CDATA[<h1 id="HashMap的put方法的具体流程"><a href="#HashMap的put方法的具体流程" class="headerlink" title="HashMap的put方法的具体流程"></a>HashMap的put方法的具体流程</h1><h2 id="常见属性："><a href="#常见属性：" class="headerlink" title="常见属性："></a>常见属性：</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> DEFAULT INITIAL CAPACITY= <span class="number">1</span> &lt;&lt; <span class="number">4</span>; <span class="comment">// 16 默认的初始容量</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> foat DEFAULT <span class="type">LOAD</span> <span class="variable">FACTOR</span> <span class="operator">=</span> <span class="number">0.75f</span>; <span class="comment">//装填（加载）因子</span></span><br><span class="line"><span class="keyword">transient</span> HashMap.Node&lt;K,V&gt; table;</span><br><span class="line"><span class="keyword">transient</span> <span class="type">int</span> size.</span><br></pre></td></tr></table></figure><ul><li>扩容阈值&#x3D; 数组容量 *加载因子</li></ul><h2 id="table"><a href="#table" class="headerlink" title="table"></a>table</h2><p>HashMap.Node&lt;K,V&gt; table中的table，table本质上是一个数组</p><p>table：<img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405222301745.png" alt="image-20240522230132550"></p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Node</span>&lt;K, V&gt; <span class="keyword">implements</span> <span class="title class_">Map</span>.Entry&lt;K, V&gt; &#123;</span><br><span class="line"><span class="keyword">final</span> <span class="type">int</span> hash;</span><br><span class="line"><span class="keyword">final</span> k key;</span><br><span class="line">V value;</span><br><span class="line">HashMap.Node&lt;k, V&gt; next;</span><br><span class="line">    </span><br><span class="line">Node(<span class="type">int</span> hash, K key, V value, HashMap.Node&lt;K, V&gt; next) &#123;</span><br><span class="line">    <span class="built_in">this</span>.hash = hash;</span><br><span class="line">    <span class="built_in">this</span>.key = key;</span><br><span class="line">    <span class="built_in">this</span>.value = value;</span><br><span class="line">    <span class="built_in">this</span>.next = next;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h2 id="HashMap的构造函数："><a href="#HashMap的构造函数：" class="headerlink" title="HashMap的构造函数："></a>HashMap的构造函数：</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">HashMap</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.loadFactor = DEFAULT_LOAD_FACTOR; <span class="comment">// 默认加载因子为0.75</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h3 id="注意："><a href="#注意：" class="headerlink" title="注意："></a>注意：</h3><ul><li>HashMap并不是在构造函数中创建数组</li><li>在无参的构造函数中，设置了默认的加载因子是0.75</li></ul><h2 id="HashMap添加数据流程："><a href="#HashMap添加数据流程：" class="headerlink" title="HashMap添加数据流程："></a>HashMap添加数据流程：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405222305620.png" alt="image-20240522230543405"></p><h3 id="过程（第一次添加）："><a href="#过程（第一次添加）：" class="headerlink" title="过程（第一次添加）："></a>过程（第一次添加）：</h3><ol><li>判断table是否为空</li><li>table为空 ，resize（）函数初始化一个长度为16的数组</li><li>通过散列函数计算key在数组中的索引 “i”</li><li>判断数组table[i]是否为空</li><li>table[i]为空</li><li>直接插入到数组</li><li>size+1 然后判断长度是否大于扩容阈值 如果大于进入resize（）函数扩容数组 </li><li>没有大于扩容阈值 </li><li>结束</li></ol><h3 id="过程（第n次添加）："><a href="#过程（第n次添加）：" class="headerlink" title="过程（第n次添加）："></a>过程（第n次添加）：</h3><ol><li>table不为空</li><li>通过散列函数计算key在数组中的索引 “i”</li><li>判断table[i]是否为空</li><li>table[i]不为空  判断key是否存在 如果key存在 覆盖value 结束</li><li>如果key不存在 判断是否为红黑树 是红黑树则在红黑树添加</li><li>如果不是红黑树 遍历链表 如果链表存在key 覆盖value</li><li>如果链表不存在key 在链表尾部添加 在判断链表长度是否＞8 </li><li>如果链表长度大于8 转化为红黑树 再插入</li><li>链表没有大于8 直接插入</li></ol><h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405222307275.png" alt="image-20240522230700290"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>HashMap底层数据结构</title>
+      <link href="/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB05-HashMap%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"/>
+      <url>/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB05-HashMap%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</url>
+      
+        <content type="html"><![CDATA[<h1 id="HashMap底层数据结构"><a href="#HashMap底层数据结构" class="headerlink" title="HashMap底层数据结构"></a>HashMap底层数据结构</h1><h2 id="二叉树"><a href="#二叉树" class="headerlink" title="二叉树"></a>二叉树</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405221518664.png" alt="image-20240522151811594"></p><p>如图所示：</p><ul><li>每个节点最多有两个“叉”，分别是左子节点和右子节点。</li><li>不要求每个节点都有两个子节点，有的节点只有左子节点，有的节点只有右子节点。</li><li>二叉树每个节点的左子树和右子树也分别满足二叉树的定义</li></ul><h3 id="二叉搜索树"><a href="#二叉搜索树" class="headerlink" title="二叉搜索树"></a>二叉搜索树</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405221519172.png" alt="image-20240522151948127"></p><p>如图所示：</p><ul><li>二叉搜索树(Binary Search Tree,BST)又名二叉查找树，有序二叉树</li><li>在树中的任意一个节点，其左子树中的每个节点的值，都要小于这个节点的值而右子树节点的值都大于这个节点的值</li><li>没有键值相等的节点</li><li><strong>通常情况</strong>下二叉树<strong>搜索&#x2F;添加&#x2F;删除</strong>的时间复杂度为O(logn)  因为添加删除也都需要遍历树 所以为O(logn)<ul><li>特殊情况为O（n），例如退化成链表：</li><li><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405222330789.png" alt="image-20240522152156605"></li></ul></li></ul><h3 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a>红黑树</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405221526428.png" alt="image-20240522152638392"></p><ul><li>一种为了平衡二叉搜索树退化成链表的二叉树</li><li><strong>搜索&#x2F;添加&#x2F;删除</strong>的时间复杂度为O(logn)</li></ul><h4 id="特性："><a href="#特性：" class="headerlink" title="特性："></a>特性：</h4><ul><li>性质1:节点要么是红色,要么是黑色</li><li>性质2:根节点是黑色</li><li>性质3:叶子节点都是黑色的空节点</li><li>性质4:红黑树中红色节点的子节点都是黑色</li><li>性质5:从任一节点到叶子节点的所有路径都包含相同数目的黑色节点</li></ul><h2 id="散列表"><a href="#散列表" class="headerlink" title="散列表"></a>散列表</h2><h4 id="什么是散列表："><a href="#什么是散列表：" class="headerlink" title="什么是散列表："></a>什么是散列表：</h4><p>简单来说，散列表的底层是用数组实现，数组里的元素是链表，链表又可以升级为红黑树</p><ul><li>HashMap底层使用散列表实现</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405221606217.png" alt="image-20240522160624191"></p><h4 id="其中："><a href="#其中：" class="headerlink" title="其中："></a>其中：</h4><ul><li>散列表的key转化为数组的下标 可以根据key去查询value</li><li>将key转化为数组下标的函数叫做散列函数</li></ul><h4 id="散列函数的基本要求："><a href="#散列函数的基本要求：" class="headerlink" title="散列函数的基本要求："></a>散列函数的基本要求：</h4><ul><li>散列函数计算得到的散列值必须是大于等于0的正整数，因为hashValue需要作为数组的下标。</li><li>如果key1&#x3D;&#x3D;key2，那么经过hash后得到的哈希值也必相同即:hash(key1)&#x3D;&#x3D; hash(key2)</li><li>如果key1!&#x3D;key2，那么经过hash后得到的哈希值也必不相同即:hash(key1)!&#x3D; hash(key2)</li></ul><h4 id="散列冲突："><a href="#散列冲突：" class="headerlink" title="散列冲突："></a>散列冲突：</h4><ul><li>散列冲突指的是：不用的Key通过散列函数得到相同数组下标 如图所示<ul><li><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405221611256.png" alt="image-20240522161149725"></li></ul></li></ul><h4 id="散列冲突—拉链法："><a href="#散列冲突—拉链法：" class="headerlink" title="散列冲突—拉链法："></a>散列冲突—拉链法：</h4><ul><li>为解决散列冲突的方法</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405221614604.png" alt="image-20240522161432475"></p><p>通过在冲突的数组下标中，用链表存储冲突的值</p><h5 id="时间复杂度："><a href="#时间复杂度：" class="headerlink" title="时间复杂度："></a>时间复杂度：</h5><ul><li>添加的时间复杂度O（1）</li><li>平均情况下基于链表法解决冲突时查询&#x2F;删除的时间复杂度是O(1)</li><li>极端情况，也就是退化成链表的时候 查询的时间复杂度是O(n) 如图：<ul><li><img src="/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB05-HashMap%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/Users\Atdote\AppData\Roaming\Typora\typora-user-images\image-20240522162024594.png" alt="image-20240522162024594"></li></ul></li></ul><h4 id="极端情况解决方法："><a href="#极端情况解决方法：" class="headerlink" title="极端情况解决方法："></a>极端情况解决方法：</h4><p>解决方法：</p><ul><li>使用红黑树</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405221621291.png" alt="image-20240522162100751"></p><p>使用红黑树的好处：</p><ul><li>极端情况下查询的时间复杂度为O（logn）</li><li>可以防止DDos攻击</li></ul><h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><ul><li>HashMap的底层：<ul><li>使用散列表，底层是数组</li><li>使用散列函数实现key转化为下标</li><li>使用拉链法解决散列冲突</li><li>使用红黑树解决长链表问题和DDos攻击问题</li></ul></li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>HashMap扩容机制</title>
+      <link href="/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB08-HashMap%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6/"/>
+      <url>/2024/05/23/Java%E9%9B%86%E5%90%88%E7%B1%BB08-HashMap%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6/</url>
+      
+        <content type="html"><![CDATA[<h1 id="HashMap扩容机制"><a href="#HashMap扩容机制" class="headerlink" title="HashMap扩容机制"></a>HashMap扩容机制</h1><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405230000612.png" alt="image-20240523000038519"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405230003525.png" alt="image-20240523000321299"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>简历-Java精炼</title>
+      <link href="/2024/05/23/day24-%E7%AE%80%E5%8E%86-Java%E7%B2%BE%E7%82%BC/"/>
+      <url>/2024/05/23/day24-%E7%AE%80%E5%8E%86-Java%E7%B2%BE%E7%82%BC/</url>
+      
+        <content type="html"><![CDATA[<h1 id="简历-Java精炼"><a href="#简历-Java精炼" class="headerlink" title="简历-Java精炼"></a>简历-Java精炼</h1><p><img src="/2024/05/23/day24-%E7%AE%80%E5%8E%86-Java%E7%B2%BE%E7%82%BC/Users\Atdote\AppData\Roaming\Typora\typora-user-images\image-20240522232534378.png" alt="image-20240522232534378"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405222325135.png" alt="image-20240522232546621"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405222326892.png" alt="image-20240522232600832"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405222326502.png" alt="image-20240522232642344"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405222326917.png" alt="image-20240522232648325"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 其他 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 其他 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>项目经历--面试可能会问到的点</title>
+      <link href="/2024/05/22/%E6%A0%A1%E5%9B%AD%E4%BC%B4%E4%BC%B4--%E9%9D%A2%E8%AF%95%E5%8F%AF%E8%83%BD%E4%BC%9A%E9%97%AE%E5%88%B0%E7%9A%84%E7%82%B9/"/>
+      <url>/2024/05/22/%E6%A0%A1%E5%9B%AD%E4%BC%B4%E4%BC%B4--%E9%9D%A2%E8%AF%95%E5%8F%AF%E8%83%BD%E4%BC%9A%E9%97%AE%E5%88%B0%E7%9A%84%E7%82%B9/</url>
+      
+        <content type="html"><![CDATA[<h3 id="项目经历–面试可能会问到的点"><a href="#项目经历–面试可能会问到的点" class="headerlink" title="项目经历–面试可能会问到的点"></a>项目经历–面试可能会问到的点</h3><h4 id="伙伴匹配系统"><a href="#伙伴匹配系统" class="headerlink" title="伙伴匹配系统"></a>伙伴匹配系统</h4><h5 id="在这个系统中使用的注解："><a href="#在这个系统中使用的注解：" class="headerlink" title="在这个系统中使用的注解："></a><strong>在这个系统中使用的注解：</strong></h5><p>RestController（Controller层注解）</p><p>RequestMapping（“&#x2F;user”）映射URL路径</p><p>CRossOrigin(跨域请求，因为前后端端口不一致，所以使用跨域注解映射到前端的注解，写在Controller类上，表示允许该控制器接收跨域请求，同时还要写一个配置类，写一个允许跨域的路径)，如果你想全局开启跨域支持或自定义跨域配置，可以通过创建一个配置类来实现。这可以通过实现 <code>WebMvcConfigurer</code> 接口或使用 <code>WebMvcConfigurerAdapter</code> 类来完成。在该类中可以使用 <code>addCorsMappings()</code> 方法来配置跨域支持。</p><p>@Resource注解和@autowired注解，需要注意 <code>@Resource</code> 注解与 Spring 框架的 <code>@Autowired</code> 和 <code>@Resource</code> 注解是有区别的，虽然它们都可以用来注入对象或资源，但它们的实现方式和作用范围不同。<code>@Resource</code> 是 Java EE 标准中定义的注解，适用于标准 Java EE 应用程序；而 <code>@Autowired</code> 和 <code>@Resource</code> 是 Spring 框架中定义的注解，适用于 Spring 应用程序。</p><p>@GetMapping&#x2F;@PostMapping&#x2F;PUTMapping&#x2F;DeleteMapping后面加URL（注意接口调试时先加RequestMapping里面的注解内容，再加类上的）</p><p>GET用于查，Post用于创建或者更改&#x2F;提交表单，PUT用于使用客户端提供的数据更新指定URL位置的资源，DeleteMapping用于将删除指定的URI位置的资源</p><p>@Configuration注解是用于表示这个类包含了一个或多个@Bean注解的方法，这些方法将被用于定义应用程序的Bean。在Spring应用程序上下文启动时，它将扫描@Configuration注解的类，并将其内部@Bean注解的方法作为Bean定义加载到应用程序上下文中。</p><p>@Component是Spring框架中的一个注解，用于将一个类标记为Spring Bean，并将其注册到应用程序上下文中。使该类可以被自动检测和实例化为一个Spring Bean。在Spring应用程序启动时，Spring容器会扫描所有被@Component注解标记的类，并将其注册为Spring Bean。如果要在其他组件中使用这些Spring Bean，则可以使用@Autowired或@Resource等注解将它们注入到需要它们的组件中。</p><p>@Slf4j 用于开启输出日志</p><p>@Data  lombok注解，用于自动生成get和set方法，还有构造器等</p><p>@MapperScan注解需要指定一个或多个包路径作为参数，表示需要扫描哪些包下的Mapper接口。在应用程序启动时，MyBatis框架会扫描这些包下的所有Mapper接口，并将其注册到MapperRegistry中，从而使得这些接口可以被应用程序中的其他组件所使用。</p><p>@RestControllerAdvice是Spring框架中的一个注解，用于定义一个全局的异常处理类，可以对所有Controller中抛出的异常进行统一处理。当应用程序中发生异常时，Spring会自动将异常信息传递给@RestControllerAdvice注解所标注的类的相应方法进行处理，从而实现全局异常处理的功能。</p><p>@RestControllerAdvice注解通常需要结合@ExceptionHandler注解（@ExceptionHandler后面填写的参数是用来捕捉看发生什么异常用）来使用，@ExceptionHandler注解用于定义处理特定异常类型的方法，被定义的方法需要返回一个合适的响应体来告知客户端发生了什么错误。@RestControllerAdvice注解可以同时包含多个@ExceptionHandler方法，每个方法可以处理不同的异常类型。</p><p>使用@RestControllerAdvice注解可以有效地避免应用程序中的异常信息直接暴露给客户端，提高了系统的健壮性和安全性。此外，使用@RestControllerAdvice注解还可以提高代码的复用性，减少代码冗余。</p><h5 id="如何在Spring-Boot中实现统一的异常处理？"><a href="#如何在Spring-Boot中实现统一的异常处理？" class="headerlink" title="如何在Spring Boot中实现统一的异常处理？"></a><strong>如何在Spring Boot中实现统一的异常处理？</strong></h5><p>定义一个包，用于实现对异常的封装处理，定义了一个全局异常处理器和自定义异常类，全局异常处理器用于处理运行时异常和自定义异常，并且统一返回，使用了@RestControllerAdvice+@ExceptionHandler注解，配合使用，写了两个类用于捕获各自的异常，ExceptionHandler里面可以填写参数来指定具体要返回的异常</p><h5 id="如何在项目中进行数据的返回的？"><a href="#如何在项目中进行数据的返回的？" class="headerlink" title="如何在项目中进行数据的返回的？"></a><strong>如何在项目中进行数据的返回的？</strong></h5><p>定义一个通用返回类，配合异常处理器使用，在其中定义错误码，具体错误信息，错误信息描述等内容，再分别定义一个类的多个方法来返回不同情况的信息，实现统一封装，避免暴露给客户端信息</p><h5 id="什么是编辑距离算法，能介绍一下吗，动态规划的核心思想是什么能说一下吗"><a href="#什么是编辑距离算法，能介绍一下吗，动态规划的核心思想是什么能说一下吗" class="headerlink" title="什么是编辑距离算法，能介绍一下吗，动态规划的核心思想是什么能说一下吗"></a>什么是编辑距离算法，能介绍一下吗，动态规划的核心思想是什么能说一下吗</h5><p>编辑距离算法（Edit Distance），也称Levenshtein距离，用于衡量两个字符串之间的差异程度。它是指由一个字符串转换成另一个字符串所需的最少操作次数，其中操作包括插入、删除、替换三种操作。</p><p>例如，将字符串“kitten”转换成字符串“sitting”，需要进行3次操作：</p><ol><li>将字符“k”替换为字符“s”<ol start="2"><li>将字符“e”替换为字符“i”<ol start="3"><li>插入字符“g”</li></ol></li></ol></li></ol><p>因此，这两个字符串的编辑距离为3。</p><p>编辑距离算法的核心思想是动态规划。设字符串A和B的长度分别为m和n，定义一个二维数组dp[m+1][n+1]，其中dp[i][j]表示将A的前i个字符转换为B的前j个字符所需的最少操作次数。则有以下状态转移方程：</p><p>当A[i] &#x3D;&#x3D; B[j]时，dp[i][j] &#x3D; dp[i-1][j-1]；</p><p>否则，dp[i][j] &#x3D; min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]) + 1；</p><p>其中，dp[i-1][j]表示删除A[i]，dp[i][j-1]表示插入B[j]，dp[i-1][j-1]表示替换A[i]为B[j]。</p><p>最终，dp[m][n]即为A和B的编辑距离</p><p>编辑距离算法的时间复杂度为O(m<em>n)，空间复杂度为O(m</em>n)。在实际应用中，可以通过优化空间复杂度来提高算法的效率。例如，可以使用滚动数组或矩阵转置等技巧来优化空间复杂度。</p><p>（动态规划）</p><p>\1. 定义状态：找到问题的最优子结构，明确问题中需要求解的状态。</p><p>\2. 设计转移方程：找到状态之间的递推关系，将原问题分解成若干个子问题。</p><p>\3. 初始化状态：找到问题中的边界条件，确定递推的起点。</p><p>\4. 求解最优解：按照递推关系，从起点开始递推，直到得到需要求解的状态。</p><h5 id="数据库表的设计"><a href="#数据库表的设计" class="headerlink" title="数据库表的设计"></a>数据库表的设计</h5><h5 id="你是如何确定数据库表结构的？你采用了哪些建表原则和规范？"><a href="#你是如何确定数据库表结构的？你采用了哪些建表原则和规范？" class="headerlink" title="你是如何确定数据库表结构的？你采用了哪些建表原则和规范？"></a><strong>你是如何确定数据库表结构的？你采用了哪些建表原则和规范？</strong></h5><p>首先确定系统针对的用户，既然有创建伙伴和寻找伙伴的需求，就需要设计一个用户表，想要实现搜索，就还需要给每个用户上标签，上了标签之后需要标签表，同时因为用户和队伍是多对多的关系需要设计一个用户和队伍的关系表，这就是数据库的表结构。</p><p><strong>建表原则和规范</strong></p><p>\1. 主键和自增长：每张表都设置了一个主键，并使用了<code>auto_increment</code>实现自增长。</p><p>\2. 数据类型：对于每个字段都选择了合适的数据类型，如<code>varchar</code>、<code>int</code>、<code>datetime</code>等。</p><p>\3. 注释：每个表和字段都添加了注释，方便其他人阅读和理解。</p><h5 id="你对于表的设计是否考虑了数据冗余和范式设计的问题？如果考虑了，你是如何平衡冗余和范式的冲突的？（这里不知道我回答的对不对）"><a href="#你对于表的设计是否考虑了数据冗余和范式设计的问题？如果考虑了，你是如何平衡冗余和范式的冲突的？（这里不知道我回答的对不对）" class="headerlink" title="你对于表的设计是否考虑了数据冗余和范式设计的问题？如果考虑了，你是如何平衡冗余和范式的冲突的？（这里不知道我回答的对不对）"></a>你对于表的设计是否考虑了数据冗余和范式设计的问题？如果考虑了，你是如何平衡冗余和范式的冲突的？（这里不知道我回答的对不对）</h5><p>比如对于标签和用户之间的关系这个字段的设计，如果遵循第一范式的要求，那么在用户表的标签格中就不应该设计Json格式的字符串，但是考虑到如果新建一个标签表会变成多表联查，并且考虑到用户数据量很大所以没有存到多个表中，以提高查询效率和减少关联查询的次数。</p><h5 id="在数据量增长的情况下，你会如何考虑数据库的性能和扩展性？是否有考虑到分库分表的需求？"><a href="#在数据量增长的情况下，你会如何考虑数据库的性能和扩展性？是否有考虑到分库分表的需求？" class="headerlink" title="在数据量增长的情况下，你会如何考虑数据库的性能和扩展性？是否有考虑到分库分表的需求？"></a><strong>在数据量增长的情况下，你会如何考虑数据库的性能和扩展性？是否有考虑到分库分表的需求？</strong></h5><p>\1. 确定数据库性能瓶颈并进行优化：可以使用各种数据库监控和性能调优工具，例如MySQL的slow query log，Explain等来发现慢查询、索引优化、缓存优化等问题，从而提高数据库性能。</p><p>\2. 垂直扩展：通过升级数据库服务器硬件（例如增加CPU，内存和磁盘容量等）来增加数据库的性能。但是，这种方法的成本较高，且在一定程度上受到硬件限制。</p><p>\3. 水平扩展：可以通过添加更多的数据库实例来扩展系统的容量。可以使用主从复制或分片技术来分摊负载，从而提高数据库的性能。</p><p>\4. 分库分表：在数据量增长到一定程度时，可以考虑使用分库分表来解决数据库性能和扩展性问题。可以将数据按照一定规则分成多个库或表，然后将它们分布在不同的服务器上。这种方法可以有效地提高数据库的扩展性和性能，但是也会带来一些额外的复杂性和成本。</p><h5 id="请介绍一下Redis分布式Session的实现方式"><a href="#请介绍一下Redis分布式Session的实现方式" class="headerlink" title="** 请介绍一下Redis分布式Session的实现方式**"></a>** 请介绍一下Redis分布式Session的实现方式**</h5><p>因为Session只在同一个服务器上储存，Redis分布式Session，是通过将Session信息存储到Redis中实现的Session共享方案，让其他服务器也能拥有Session信息，它可以有效解决分布式系统中Session共享的问题。</p><h5 id="请举例说明一下如何使用Java8中的Stream流API处理复杂集合内容？"><a href="#请举例说明一下如何使用Java8中的Stream流API处理复杂集合内容？" class="headerlink" title="请举例说明一下如何使用Java8中的Stream流API处理复杂集合内容？"></a><strong>请举例说明一下如何使用Java8中的Stream流API处理复杂集合内容？</strong></h5><p>比如有一个List<User> userList，想让他过滤出所有年龄小于30岁的用户，再按着id升序排列，最后返回id列表</User></p><p>可以先使用Stream流的filter过滤出年龄小于30的用链式调用在后面跟上排序，最后映射为map，再使用collect转换为List</p><h5 id="Redis缓存的使用是为了解决高并发访问下数据库读写压力过大的问题，提高系统的性能和响应速度。下面是使用Redis缓存的好处和需要注意的问题："><a href="#Redis缓存的使用是为了解决高并发访问下数据库读写压力过大的问题，提高系统的性能和响应速度。下面是使用Redis缓存的好处和需要注意的问题：" class="headerlink" title="Redis缓存的使用是为了解决高并发访问下数据库读写压力过大的问题，提高系统的性能和响应速度。下面是使用Redis缓存的好处和需要注意的问题："></a>Redis缓存的使用是为了解决高并发访问下数据库读写压力过大的问题，提高系统的性能和响应速度。下面是使用Redis缓存的好处和需要注意的问题：</h5><p>Redis缓存的使用是为了解决高并发访问下数据库读写压力过大的问题，提高系统的性能和响应速度。下面是使用Redis缓存的好处和需要注意的问题：</p><p>好处：</p><p>\1. 提高性能和响应速度：Redis缓存使用内存进行数据存储，读写速度非常快，能够大大减少数据库的读写次数，提高系统的性能和响应速度。</p><p>\2. 缓解数据库压力：Redis缓存可以将热点数据缓存到内存中，减少数据库的读写压力，防止出现数据库瓶颈。</p><p>\3. 减少网络传输开销：Redis缓存位于应用层和数据库之间，可以缓存需要频繁查询的数据，避免频繁地进行网络传输，减少网络传输开销。</p><p>需要注意的问题：</p><p>\1. 缓存数据一致性问题：使用Redis缓存需要注意缓存数据和数据库数据的一致性问题，缓存数据的更新需要与数据库数据同步更新，避免出现数据不一致的情况。</p><p>\2. 缓存雪崩问题：当缓存中的数据过期或失效时，如果大量请求同时访问数据库，会导致数据库压力剧增，进而引起系统崩溃。为了避免这种情况的发生，可以采用分布式锁、缓存预热等方式进行缓解。</p><p>\3. 缓存穿透问题：当访问一个不存在的数据时，会导致缓存和数据库都无法命中，进而导致频繁地进行数据库查询，引起数据库压力剧增。为了避免这种情况的发生，可以采用布隆过滤器、缓存空对象等方式进行缓解。</p><p>\4. 缓存击穿问题：当一个热点数据过期或失效时，大量请求同时访问该数据，会导致缓存和数据库都无法命中，进而引起数据库压力剧增。为了避免这种情况的发生，可以采用分布式锁、缓存预热等方式进行缓解。</p><h5 id="什么是缓存预热？它的作用是什么？请说明如何通过分布式锁实现缓存预热和操作互斥？"><a href="#什么是缓存预热？它的作用是什么？请说明如何通过分布式锁实现缓存预热和操作互斥？" class="headerlink" title="** 什么是缓存预热？它的作用是什么？请说明如何通过分布式锁实现缓存预热和操作互斥？**"></a>** 什么是缓存预热？它的作用是什么？请说明如何通过分布式锁实现缓存预热和操作互斥？**</h5><p>缓存预热是在系统启动之前或者业务高峰期之前，预先将热点数据加载到缓存中，避免在实际使用时因为缓存未命中而需要从数据库中读取数据，从而提升系统的性能和响应速度。</p><p>缓存预热的作用是在系统实际使用前，先将热点数据预先加载到缓存中，减少了系统实际运行时的缓存命中率低、从数据库中读取数据的情况，从而提高系统的性能和响应速度。</p><p>通过分布式锁实现缓存预热和操作互斥可以确保在多个节点同时进行缓存预热或者操作时，只有一个节点能够执行缓存预热或者操作，避免了重复操作和数据的不一致。</p><p><strong>具体实现方式如下：</strong></p><p>\1. 定义一个全局唯一的key，表示需要加锁的资源，例如缓存预热操作对应的key为“cache_preheat_lock”。</p><p>\2. <strong>使用Redis的SETNX命令（set if not exists）来获取锁，</strong>如果返回值为1表示获取锁成功，否则表示锁已经被其他节点获取，需要等待。</p><p>\3. 执行缓存预热操作或者其他需要操作互斥的操作。</p><p>\4. 执行完成后，<strong>使用Redis的DEL命令删除锁对应的key</strong>，释放锁。</p><p>需要注意的是，为了防止锁的失效导致死锁，<strong>需要给锁设置一个过期时间</strong>，确保在锁失效之后，其他节点可以重新获取锁。<strong>另外，为了避免误删其他节点的锁，可以在DEL命令执行前先通过GET命令获取锁的值，判断是否是当前节点持有的锁</strong>，如果是才能执行DEL命令。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 其他 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 其他 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ArrayList数据结构和底层扩容原理</title>
+      <link href="/2024/05/22/Java%E9%9B%86%E5%90%88%E7%B1%BB02-ArrayList%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E5%BA%95%E5%B1%82%E6%89%A9%E5%AE%B9%E5%8E%9F%E7%90%86/"/>
+      <url>/2024/05/22/Java%E9%9B%86%E5%90%88%E7%B1%BB02-ArrayList%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E5%BA%95%E5%B1%82%E6%89%A9%E5%AE%B9%E5%8E%9F%E7%90%86/</url>
+      
+        <content type="html"><![CDATA[<h1 id="ArrayList数据结构和底层扩容原理"><a href="#ArrayList数据结构和底层扩容原理" class="headerlink" title="ArrayList数据结构和底层扩容原理"></a>ArrayList数据结构和底层扩容原理</h1><h2 id="ArrayList的数据结构——数组"><a href="#ArrayList的数据结构——数组" class="headerlink" title="ArrayList的数据结构——数组"></a>ArrayList的数据结构——数组</h2><ul><li>数组是用<strong>连续的内存空间</strong>存储<strong>相同数据类型</strong>的数据结构</li></ul><h3 id="为什么数组从0开始-而不是从1开始："><a href="#为什么数组从0开始-而不是从1开始：" class="headerlink" title="为什么数组从0开始 而不是从1开始："></a>为什么数组从0开始 而不是从1开始：</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405192253316.png" alt="image-20240519225331039"></p><p>如果从1开始  cpu需要多一个减法指令 当数组要非常频繁的用a[i] 那么CPU就会要多执行很多次减法操作 </p><p>所以：</p><ul><li>从性能角度上来说 数组从0开始更佳</li></ul><h2 id="ArrayList的源码分析"><a href="#ArrayList的源码分析" class="headerlink" title="ArrayList的源码分析"></a>ArrayList的源码分析</h2><h3 id="ArrayList的成员属性"><a href="#ArrayList的成员属性" class="headerlink" title="ArrayList的成员属性"></a>ArrayList的成员属性</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 默认初始化容量</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">int</span> <span class="variable">DEFAULT_CAPACITY</span> <span class="operator">=</span> <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 用于空实例的共享空数组实例</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Object[] EMPTY_ELEMENTDATA = &#123;&#125;;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">用于默认大小的空实例的共享空数组实例。 </span></span><br><span class="line"><span class="comment">我们将其与 EMPTY_ELEMENTDATA 区分开来，</span></span><br><span class="line"><span class="comment">以了解添加第一个元素时要膨胀多少。</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = &#123;&#125;;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 存放元素的数组</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="keyword">transient</span> Object[] elementData; <span class="comment">// non-private to simplify nested class access</span></span><br><span class="line"></span><br><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">    * ArrayList的大小</span></span><br><span class="line"><span class="comment">    * <span class="doctag">@serial</span></span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="keyword">private</span> <span class="type">int</span> size;</span><br></pre></td></tr></table></figure><h3 id="ArrayList的初始化"><a href="#ArrayList的初始化" class="headerlink" title="ArrayList的初始化"></a>ArrayList的初始化</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">ArrayList</span><span class="params">(<span class="type">int</span> initialCapacity)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (initialCapacity &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">this</span>.elementData = <span class="keyword">new</span> <span class="title class_">Object</span>[initialCapacity];</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (initialCapacity == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">this</span>.elementData = EMPTY_ELEMENTDATA;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalArgumentException</span>(<span class="string">&quot;Illegal Capacity: &quot;</span>+</span><br><span class="line">                                           initialCapacity);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="title function_">ArrayList</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><ol><li>如果传入了一个int数字 则初始化一个这个数字大小的数组</li><li>如果传入的是0或者无参 则elementData为空数组</li></ol><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">ArrayList</span><span class="params">(Collection&lt;? extends E&gt; c)</span> &#123;</span><br><span class="line">    Object[] a = c.toArray();</span><br><span class="line">    <span class="keyword">if</span> ((size = a.length) != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (c.getClass() == ArrayList.class) &#123;</span><br><span class="line">            elementData = a;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            elementData = Arrays.copyOf(a, size, Object[].class);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// replace with empty array.</span></span><br><span class="line">        elementData = EMPTY_ELEMENTDATA;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>将collection对象转换成数组，然后将数组的地址的赋给elementData</p><h3 id="ArrayList的添加数据"><a href="#ArrayList的添加数据" class="headerlink" title="ArrayList的添加数据"></a>ArrayList的添加数据</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405211938269.png" alt="image-20240521193840806"></p><p>过程（添加一个数字1到数组中）</p><ol><li>ensureCapacityInternal(0+1)</li><li>calculateCapacity（[],1） <ul><li>进入函数体 因为elementData是空默认数组 </li><li>所以执行return Math.max（DEFAULT_CAPACITY,minCapacity) 返回<strong>默认容量10</strong></li></ul></li><li>ensureExplicitCapacity(10)<ul><li>if(10-0&gt;0) ture</li><li>ture说明容量不够 需要扩容</li></ul></li><li>grow(10)<ul><li>oldCapacity&#x3D;0  此时elementData是一个空数组</li><li>newCapacity&#x3D;0+0  oldCapacity&gt;&gt;1 意思是二进制下的该数字右移一位 说白了就是除以2</li><li>if（0-10&lt;0）true</li><li>newCapacity&#x3D;10</li><li>elementData&#x3D;Arrays.copyOf（[],10)</li></ul></li><li>elementData[0++]&#x3D;1<ul><li>0++：先赋值再++</li><li>elementData索引为0的值为1</li><li>size&#x3D;0+1&#x3D;1</li></ul></li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212018912.png" alt="image-20240521201805335"></p><p>过程（添加一个数字2~10到数组中，添加10到数组中）</p><ol><li>ensureCapacityInternal(9+1)</li><li>calculateCapacity（[1,2,3….9],10） <ul><li>进入函数体 因为elementData不是空默认数组 </li><li>所以执行return minCapacity  return 10</li></ul></li><li>ensureExplicitCapacity(10)<ul><li>if(10-10&gt;0) false</li><li>false 说明容量足够 不需要扩容</li></ul></li><li>elementData[9++]&#x3D;10<ul><li>9++：先赋值再++</li><li>elementData索引为9的值为1</li><li>size&#x3D;9+1&#x3D;10</li></ul></li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212036315.png" alt="image-20240521203612671"></p><p>过程（添加一个数字11到数组中）</p><ol><li>ensureCapacityInternal(10+1)</li><li>calculateCapacity（[1,2,3…10],11） <ul><li>进入函数体 因为elementData不是空默认数组 </li><li>所以执行return minCapacity  return 11</li></ul></li><li>ensureExplicitCapacity(11)<ul><li>if(11-10&gt;0) ture</li><li>ture说明容量不够 需要扩容</li></ul></li><li>grow(11)<ul><li>oldCapacity&#x3D;10  此时elementData是一个空数组</li><li>newCapacity&#x3D;10+5  oldCapacity&gt;&gt;1 意思是二进制下的该数字右移一位 说白了就是除以2</li><li>if（15-11&lt;0）false</li><li>newCapacity&#x3D;10</li><li>elementData&#x3D;Arrays.copyOf（[],15)</li></ul></li><li>elementData[10++]&#x3D;11<ul><li>10++：先赋值再++</li><li>elementData索引为10的值为11</li><li>size&#x3D;10+1&#x3D;11</li></ul></li></ol><h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><ul><li>ArrayList底层是用动态的数组实现的</li><li>ArrayList初始容量为0，当<strong>第一次</strong>添加数据的时候才会<strong>初始化容量为10</strong></li><li>ArrayList在进行扩容的时候是<strong>原来容量的1.5倍</strong>，每次扩容都<strong>需要拷贝数组</strong></li></ul><p><strong>ArrayList在添加数据的时候：</strong></p><ul><li>确保数组已使用长度(size)加1之后足够存下下一个数据</li><li>计算数组的容量，如果当前数组已使用长度+1后的大于当前的数组长度，则调用grow方法扩容(原来的1.5倍)</li><li>确保新增的数据有地方存储之后，则将新元素添加到位于size的位置上。</li><li>返回添加成功布尔值。</li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>List和数组的互相转化</title>
+      <link href="/2024/05/22/Java%E9%9B%86%E5%90%88%E7%B1%BB03-List%E5%92%8C%E6%95%B0%E7%BB%84%E7%9A%84%E4%BA%92%E7%9B%B8%E8%BD%AC%E5%8C%96/"/>
+      <url>/2024/05/22/Java%E9%9B%86%E5%90%88%E7%B1%BB03-List%E5%92%8C%E6%95%B0%E7%BB%84%E7%9A%84%E4%BA%92%E7%9B%B8%E8%BD%AC%E5%8C%96/</url>
+      
+        <content type="html"><![CDATA[<h1 id="List和数组的互相转化"><a href="#List和数组的互相转化" class="headerlink" title="List和数组的互相转化"></a>List和数组的互相转化</h1><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212107308.png" alt="image-20240521210730634"></p><p>直接上图好了</p><p>总结：</p><p>数组转List —&gt; Arrays.asList(arr);</p><p>List转数组 —&gt;list.toArray(new Object[list.size])</p><p>修改源数据是否有影响：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212114307.png" alt="image-20240521211437172"></p><p>原因：</p><ul><li><p>数组转化为List ：</p><p>List是指向原来的数组 也就是跟原来数组同一个地址 所以原来数组改变 List也会改变<strong>（受到影响）</strong></p></li><li><p>List转化为数组：</p><p>转化的数组是新创建的一个对象 新的数组和原来的List地址完全不一样 所以<strong>不会受到影响</strong></p></li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ArraysList和LinkedList的区别</title>
+      <link href="/2024/05/22/Java%E9%9B%86%E5%90%88%E7%B1%BB04-ArraysList%E5%92%8CLinkedList%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
+      <url>/2024/05/22/Java%E9%9B%86%E5%90%88%E7%B1%BB04-ArraysList%E5%92%8CLinkedList%E7%9A%84%E5%8C%BA%E5%88%AB/</url>
+      
+        <content type="html"><![CDATA[<h1 id="ArraysList和LinkedList的区别"><a href="#ArraysList和LinkedList的区别" class="headerlink" title="ArraysList和LinkedList的区别"></a>ArraysList和LinkedList的区别</h1><h2 id="底层："><a href="#底层：" class="headerlink" title="底层："></a>底层：</h2><ul><li>ArraysList底层是数组 </li><li>LinkedList底层是链表</li></ul><h3 id="链表的数据结构"><a href="#链表的数据结构" class="headerlink" title="链表的数据结构"></a>链表的数据结构</h3><h4 id="单向链表"><a href="#单向链表" class="headerlink" title="单向链表"></a>单向链表</h4><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212136120.png" alt="image-20240521213648264"></p><h5 id="特点："><a href="#特点：" class="headerlink" title="特点："></a>特点：</h5><ul><li>非连续，非顺序的存储结构</li><li>每一个元素称为结点</li><li>单向链表：每个结点分为两个部分：数据域和指针域<ul><li>数据域：存放结点数据</li><li>指针域：指向下一个结点</li></ul></li><li>记录下一个结点的指针叫做后继指针</li></ul><h5 id="Java实现："><a href="#Java实现：" class="headerlink" title="Java实现："></a>Java实现：</h5><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212141322.png" alt="image-20240521214151133"></p><p>其中 item为数据域 next为指针域</p><h4 id="单向链表的时间复杂度分析："><a href="#单向链表的时间复杂度分析：" class="headerlink" title="单向链表的时间复杂度分析："></a>单向链表的时间复杂度分析：</h4><h5 id="查询："><a href="#查询：" class="headerlink" title="查询："></a>查询：</h5><ul><li>只有在查询头结点的时间复杂度为O（1）</li><li>查询<strong>已知结点</strong>（知道了节点的地址）的下一个结点时间复杂度为O（1）</li><li>查询其他结点为O（n）</li></ul><h5 id="添加-删除："><a href="#添加-删除：" class="headerlink" title="添加&#x2F;删除："></a>添加&#x2F;删除：</h5><ul><li>只有在添加&#x2F;删除头结点的时间复杂度为O（1）</li><li>添加&#x2F;删除 <strong>已知结点</strong>（知道了节点的地址）的下一个结点时间复杂度为O（1）<ul><li><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212154503.png" alt="image-20240521215452387"></li></ul></li><li>添加&#x2F;删除其他结点也同样需要遍历链表 时间复杂度为O（n）</li></ul><h4 id="双向链表："><a href="#双向链表：" class="headerlink" title="双向链表："></a>双向链表：</h4><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212150571.png" alt="image-20240521215049749"></p><h5 id="特点：-1"><a href="#特点：-1" class="headerlink" title="特点："></a>特点：</h5><ul><li>非连续，非顺序的存储结构</li><li>每一个元素称为结点</li><li>双向链表：每个结点分为三个部分：数据域和前驱指针、后继指针<ul><li>数据域：存放结点数据</li><li>前驱指针：指向上一个结点</li><li>后继指针：指向下一个结点</li></ul></li></ul><h5 id="Java实现：-1"><a href="#Java实现：-1" class="headerlink" title="Java实现："></a>Java实现：</h5><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405212147624.png" alt="image-20240521214750845"></p><h4 id="双向链表对比单向链表的优缺点："><a href="#双向链表对比单向链表的优缺点：" class="headerlink" title="双向链表对比单向链表的优缺点："></a>双向链表对比单向链表的优缺点：</h4><ul><li>优点：操作灵活性</li><li>缺点：需要额外的内存空间</li></ul><h4 id="双向链表的时间复杂度"><a href="#双向链表的时间复杂度" class="headerlink" title="双向链表的时间复杂度:"></a>双向链表的时间复杂度:</h4><h5 id="查询：-1"><a href="#查询：-1" class="headerlink" title="查询："></a>查询：</h5><ul><li>查询头尾结点的时间复杂度为O（1）</li><li>查询其他结点的时间复杂度为O（n）</li><li>查询<strong>已知结点</strong>（知道了节点的地址）的上一个结点或下一个结点时间复杂度为O（1）</li></ul><h5 id="添加-删除：-1"><a href="#添加-删除：-1" class="headerlink" title="添加&#x2F;删除："></a>添加&#x2F;删除：</h5><ul><li>头尾添加&#x2F;删除结点时间复杂度为O（1）</li><li><strong>已知结点</strong>（知道了节点的地址）添加&#x2F;删除结点时间复杂度为O（1）</li><li>其他结点 添加&#x2F;删除结点时间复杂度为O（n）</li></ul><h2 id="所以ArraysList和LinkedList的区别是什么"><a href="#所以ArraysList和LinkedList的区别是什么" class="headerlink" title="所以ArraysList和LinkedList的区别是什么"></a>所以ArraysList和LinkedList的区别是什么</h2><h3 id="底层区别："><a href="#底层区别：" class="headerlink" title="底层区别："></a>底层区别：</h3><ul><li>ArrayList是通过数组实现</li><li>LinkedList是通过双向链表实现</li></ul><h3 id="效率："><a href="#效率：" class="headerlink" title="效率："></a>效率：</h3><ul><li>ArrayList按照下标查询的时间复杂度为O（1），LinkedList不支持下标查询，LinkedList支持根据结点地址查询</li><li>查找（未知索引）：ArrayList需要遍历，链表也需要遍历，时间复杂度都是O（n）</li><li>添加和删除<ul><li>ArrayList尾部插入和删除，时间复杂度为O（1），其他位置增删需要挪动数组，时间复杂度为O（n）</li><li>LinkedList头尾结点增删时间复杂度为O（1），其他需要遍历链表，时间复杂度是O（1）</li><li>LinkedList <strong>已知结点</strong>（知道了节点的地址）添加&#x2F;删除结点时间复杂度为O（1）</li></ul></li></ul><h3 id="空间："><a href="#空间：" class="headerlink" title="空间："></a>空间：</h3><ul><li>ArrayList底层是数组，内存连续，节省内存</li><li>LinkedList 是双向链表需要存储数据，和两个指针，更占用内存</li></ul><h3 id="线程安全："><a href="#线程安全：" class="headerlink" title="线程安全："></a>线程安全：</h3><ul><li>ArrayList和LinkedList都不是线程安全的</li><li>如果需要保证线程安全，有两种方案:<ul><li>在方法内使用，局部变量则是线程安全的</li><li>使用线程安全的ArrayList和LinkedList</li></ul></li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Object&gt; syncArrayList = Collections.synchronizedList(<span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;());</span><br><span class="line">List&lt;Object&gt; syncLinkedList = Collections.synchronizedList(<span class="keyword">new</span> <span class="title class_">LinkedList</span>&lt;&gt;());</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>算法复杂度分析</title>
+      <link href="/2024/05/21/Java%E9%9B%86%E5%90%88%E7%B1%BB01-%E7%AE%97%E6%B3%95%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%88%86%E6%9E%90/"/>
+      <url>/2024/05/21/Java%E9%9B%86%E5%90%88%E7%B1%BB01-%E7%AE%97%E6%B3%95%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%88%86%E6%9E%90/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Java集合类01-算法复杂度分析"><a href="#Java集合类01-算法复杂度分析" class="headerlink" title="Java集合类01-算法复杂度分析"></a>Java集合类01-算法复杂度分析</h1><h2 id="1-什么是算法的时间复杂度"><a href="#1-什么是算法的时间复杂度" class="headerlink" title="1.什么是算法的时间复杂度"></a>1.什么是算法的时间复杂度</h2><ul><li>时间复杂度指的是<strong>程序执行的时间</strong>和<strong>数据规模</strong>的增长关系</li></ul><p>类似这个图：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405182106391.png" alt="image-20240518210627877"></p><ul><li><strong>其中n表示代码的数据规模 T（n）表示代码的执行时间</strong></li></ul><p>常见复杂度表达形式：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405182115594.png" alt="image-20240518210956273"></p><p>其中：</p><ul><li><p>O（1）表示代码固定为常数级，代码执行行数确定</p></li><li><p>O（log n）如图示：</p><ul><li><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405182115047.png" alt="image-20240518211339802"></li></ul></li><li><p>O（n）通常是一个for循环</p><ul><li><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405182115908.png" alt="image-20240518211243130"></li></ul></li><li><p>O（n*log n）通常是一个for循环里面有一个log n</p><ul><li><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405182115224.png" alt="image-20240518211448248"></li></ul></li><li><p>O（n^2）通常是两个for循环</p><ul><li><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405182115026.png" alt="image-20240518211306490"></li></ul></li></ul><h2 id="2-什么是空间复杂度"><a href="#2-什么是空间复杂度" class="headerlink" title="2.什么是空间复杂度"></a>2.什么是空间复杂度</h2><ul><li>空间复杂度简单说就是变量占的空间，或者说有多少个变量</li></ul><p>如图所示：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405211908879.png" alt="image-20240518211803586"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405211908219.png" alt="image-20240518211811564"></p><p>常见空间复杂度就只有O（1），O（n），O（n^2），空间复杂度一般不怎么考，有个了解就好了。因为现在计算机的内存都很大</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Linux安装Nginx 以及配置Nginx</title>
+      <link href="/2024/05/15/day22-Linux%E5%AE%89%E8%A3%85Nginx%20%E9%83%A8%E7%BD%B2%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE%20%E4%BB%A5%E5%8F%8A%E9%85%8D%E7%BD%AENginx/"/>
+      <url>/2024/05/15/day22-Linux%E5%AE%89%E8%A3%85Nginx%20%E9%83%A8%E7%BD%B2%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE%20%E4%BB%A5%E5%8F%8A%E9%85%8D%E7%BD%AENginx/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Linux安装Nginx-以及配置Nginx"><a href="#Linux安装Nginx-以及配置Nginx" class="headerlink" title="Linux安装Nginx 以及配置Nginx"></a>Linux安装Nginx 以及配置Nginx</h1><h3 id="1-安装库文件和Nginx下载"><a href="#1-安装库文件和Nginx下载" class="headerlink" title="1.安装库文件和Nginx下载"></a>1.安装库文件和Nginx下载</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">yum install gcc-c++ -y</span><br><span class="line">yum install -y pcre pcre-devel -y</span><br><span class="line">yum install -y zlib zlib-devel -y</span><br><span class="line">yum install -y openssl openssl-devel -y</span><br></pre></td></tr></table></figure><p>Nginx下载：</p><p>链接：<a href="https://pan.baidu.com/s/10d3JIKUJlPsox1WXxGU3IQ">https://pan.baidu.com/s/10d3JIKUJlPsox1WXxGU3IQ</a><br>提取码：nf69</p><h3 id="2-用xftp将解压包放入-tmp文件夹"><a href="#2-用xftp将解压包放入-tmp文件夹" class="headerlink" title="2.用xftp将解压包放入&#x2F;tmp文件夹"></a>2.用xftp将解压包放入&#x2F;tmp文件夹</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405152238169.png" alt="image-20240515223801682"></p><h3 id="3-解压、编译nginx并安装"><a href="#3-解压、编译nginx并安装" class="headerlink" title="3.解压、编译nginx并安装"></a>3.解压、编译nginx并安装</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mkdir /usr/local/nginx</span><br><span class="line">cd /tmp</span><br><span class="line">tar -zxvf /tmp/nginx-1.24.0.tar.gz -C /usr/local/nginx</span><br><span class="line"></span><br><span class="line">cd /usr/local/nginx/nginx-1.24.0</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">编译安装</span></span><br><span class="line">./configure --with-http_stub_status_module --with-http_ssl_module</span><br><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure><h3 id="4-nginx命令"><a href="#4-nginx命令" class="headerlink" title="4.nginx命令"></a>4.nginx命令</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">创建软连接，让系统识别Nginx命令</span></span><br><span class="line">ln -s /usr/local/nginx/sbin/nginx /usr/local/sbin/</span><br><span class="line"><span class="meta prompt_"> </span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">检查文件是否正确</span></span><br><span class="line">nginx -t</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动</span></span><br><span class="line">nginx    </span><br><span class="line"></span><br><span class="line">ps -ef | grep nginx  # 查看</span><br><span class="line">./nginx -s stop      # 停止</span><br><span class="line">./nginx -s reload    # 重启</span><br></pre></td></tr></table></figure><p><strong>ps -ef | grep nginx</strong></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405152240958.png" alt="image-20240515224036388"></p><h3 id="5-打包vue的项目"><a href="#5-打包vue的项目" class="headerlink" title="5.打包vue的项目"></a>5.打包vue的项目</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405211907787.png" alt="image-20240515224311433"></p><h3 id="6-放入Linux服务器文件夹"><a href="#6-放入Linux服务器文件夹" class="headerlink" title="6.放入Linux服务器文件夹"></a>6.放入Linux服务器文件夹</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405152246640.png" alt="image-20240515224632100"></p><h3 id="7-修改nginx配置文件"><a href="#7-修改nginx配置文件" class="headerlink" title="7.修改nginx配置文件"></a>7.修改nginx配置文件</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /usr/local/nginx/conf/nginx.conf</span><br></pre></td></tr></table></figure><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">    listen 9090;</span><br><span class="line">    server_name 1.14.191.16;</span><br><span class="line"></span><br><span class="line">    #charset koi8-r;</span><br><span class="line"></span><br><span class="line">    #access_log logs/host.access.log main;</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">        root /home/dist;</span><br><span class="line">        index index.html index.htm;</span><br><span class="line">        try_files $uri $uri/ /index.html;</span><br><span class="line">    &#125;</span><br><span class="line">        location /api/ &#123;</span><br><span class="line">        proxy_pass http://1.14.191.16:8082/;</span><br><span class="line">        proxy_set_header Host $host:$server_port;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405152253614.png" alt="image-20240515225125819"></p><p><strong>如果你的前端项目是用api转发：</strong></p><p>例如：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405152253575.png" alt="image-20240515225338410"></p><p>则需要再ngin服务器加上这些：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405211907809.png" alt="image-20240515225439553"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405211907942.png" alt="image-20240515225511593"></p><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">upstream portalServer &#123;</span><br><span class="line">        # 后端地址</span><br><span class="line">        server 1.14.191.16:9090;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure><p><strong>不加的话前端会找不到后端的地址的</strong></p><p>最后 按Esc切换编辑模式  然后输入:wq保存</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Linux </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Nginx一键杀死所有进程</title>
+      <link href="/2024/05/12/day21-nginx%E4%B8%80%E9%94%AE%E6%9D%80%E6%AD%BB%E6%89%80%E6%9C%89%E8%BF%9B%E7%A8%8B/"/>
+      <url>/2024/05/12/day21-nginx%E4%B8%80%E9%94%AE%E6%9D%80%E6%AD%BB%E6%89%80%E6%9C%89%E8%BF%9B%E7%A8%8B/</url>
+      
+        <content type="html"><![CDATA[<h1 id="Nginx一键杀死所有进程"><a href="#Nginx一键杀死所有进程" class="headerlink" title="Nginx一键杀死所有进程"></a>Nginx一键杀死所有进程</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@echo off</span><br><span class="line">taskkill /f /im nginx.exe</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> Linux </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Nginx启动前端项目</title>
       <link href="/2024/05/10/day20-Nginx%E5%90%AF%E5%8A%A8%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE/"/>
       <url>/2024/05/10/day20-Nginx%E5%90%AF%E5%8A%A8%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE/</url>
@@ -29,11 +329,11 @@
     
     
     <entry>
-      <title>什么是MVCC</title>
-      <link href="/2024/05/09/MySql07-MVCC/"/>
-      <url>/2024/05/09/MySql07-MVCC/</url>
+      <title>数据库主从同步原理</title>
+      <link href="/2024/05/09/MySql08-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/"/>
+      <url>/2024/05/09/MySql08-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/</url>
       
-        <content type="html"><![CDATA[<h1 id="什么是MVCC"><a href="#什么是MVCC" class="headerlink" title="什么是MVCC"></a>什么是MVCC</h1><ul><li>MVCC指的是<strong>多版本并发控制</strong></li><li>用于<strong>实现事务的并发控制</strong></li><li>它运行<strong>同一个时间</strong> <strong>多个事务</strong> 对<strong>同一个数据集</strong>进行<strong>读写操作</strong></li><li>同时防止数据不一致和其他问题</li></ul><h1 id="MVCC的实现机制"><a href="#MVCC的实现机制" class="headerlink" title="MVCC的实现机制"></a>MVCC的实现机制</h1><h2 id="隐藏字段和undo-log"><a href="#隐藏字段和undo-log" class="headerlink" title="隐藏字段和undo log"></a>隐藏字段和undo log</h2><ul><li>在一行数据中 有两个隐藏字段 一个是版本号 一个是回滚指针  </li><li>多版本链表（Multi-Version List）来存储数据。每个数据⾏都会 有⼀个多版本链表，其中存储着该⾏数据的所有历史版本</li><li>每次修改数据 版本号会自增  回滚指针指向上一个版本数据</li><li>链表头存放最新的数据 链表尾存放的是最早的数据</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159369.png" alt="image-20240509114607417"></p><h2 id="当前读和快照度"><a href="#当前读和快照度" class="headerlink" title="当前读和快照度"></a>当前读和快照度</h2><ul><li>当前读：读的时候加锁 这样别的事务无法修改 读到的是最新的数据 但是读写互斥</li><li>快照度：读的时候不加锁 读的是快照版本 可能不是最新的数据 读写不互斥 能够并发执行</li></ul><h2 id="readView读视图"><a href="#readView读视图" class="headerlink" title="readView读视图"></a>readView读视图</h2><h3 id="什么是readView"><a href="#什么是readView" class="headerlink" title="什么是readView?"></a>什么是readView?</h3><p>当事务读取数据时 会生成一个读视图  readView是记录当前未提交事务的id 也是MVCC读取数据的依据</p><p>如图所示：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159123.png" alt="image-20240509115901920"></p><h3 id="ReadView属性："><a href="#ReadView属性：" class="headerlink" title="ReadView属性："></a>ReadView属性：</h3><ol><li>未提交事务id</li><li>最小事务id</li><li>最大事务id+1</li><li>当前事务id</li></ol><h2 id="MVCC执行过程"><a href="#MVCC执行过程" class="headerlink" title="MVCC执行过程"></a>MVCC执行过程</h2><p>通过内部定义的一些规则 将多版本链表（Multi-Version List）中的版本号进行比对 最后读到是复合规则的版本号</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091209834.png" alt="file_1715227737714_457"></p><h3 id="过程（RC级别）："><a href="#过程（RC级别）：" class="headerlink" title="过程（RC级别）："></a>过程（RC级别）：</h3><ol><li><p>在查询时获取读视图</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217835.png" alt="image-20240509121030345"></p></li><li><p>将版本号放入规则匹配 从最新的版本开始：</p><ul><li>将4带进去</li><li>4！&#x3D;5</li><li>4！&lt;3</li><li>4！&gt;6</li><li>4在3和6之间 但是4在活跃id集合中{3,4,5}</li><li>结果： 4中的数据不符合</li><li>将3放进去重新匹配</li></ul></li><li><p>经过匹配找到复合的版本数据 最后只有2这个版本复合 所以只能读到2的数据</p></li><li><p>同理 下一个读视图 </p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217373.png" alt="image-20240509121741140"></p></li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091218861.png" alt="image-20240509121821879"></p><h2 id="RC级别和RR级别"><a href="#RC级别和RR级别" class="headerlink" title="RC级别和RR级别"></a>RC级别和RR级别</h2><ul><li>RC级别：每次查询生成一个读视图</li><li>RR级别：复用第一次查询的读视图</li></ul>]]></content>
+        <content type="html"><![CDATA[<h1 id="数据库主从同步原理"><a href="#数据库主从同步原理" class="headerlink" title="数据库主从同步原理"></a>数据库主从同步原理</h1><ul><li><p>数据库主从同步原理指的是：将主数据库同步到副数据库的意思</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091230573.png" alt="image-20240509123024478"></p></li></ul><h2 id="实现方式："><a href="#实现方式：" class="headerlink" title="实现方式："></a>实现方式：</h2><p>binlog日志：</p><p>binlog日志是MySQL中的一个二进制文件 里面记录了数据库所有的DDL和DML</p><p>具体：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091240080.png" alt="image-20240509123242187"></p><p>过程：</p><ol><li>Master 主库在事务提交时，会把数据变更记录在二进制日志文件 Binlog 中。</li><li>从库读取主库的二进制日志文件 Binlog ，写入到从库的中继日志 Relay Log 。</li><li>slave重做中继日志中的事件，将改变反映它自己的数据，</li></ol>]]></content>
       
       
       <categories>
@@ -54,11 +354,11 @@
     
     
     <entry>
-      <title>数据库主从同步原理</title>
-      <link href="/2024/05/09/MySql08-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/"/>
-      <url>/2024/05/09/MySql08-%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/</url>
+      <title>什么是MVCC</title>
+      <link href="/2024/05/09/MySql07-MVCC/"/>
+      <url>/2024/05/09/MySql07-MVCC/</url>
       
-        <content type="html"><![CDATA[<h1 id="数据库主从同步原理"><a href="#数据库主从同步原理" class="headerlink" title="数据库主从同步原理"></a>数据库主从同步原理</h1><ul><li><p>数据库主从同步原理指的是：将主数据库同步到副数据库的意思</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091230573.png" alt="image-20240509123024478"></p></li></ul><h2 id="实现方式："><a href="#实现方式：" class="headerlink" title="实现方式："></a>实现方式：</h2><p>binlog日志：</p><p>binlog日志是MySQL中的一个二进制文件 里面记录了数据库所有的DDL和DML</p><p>具体：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091240080.png" alt="image-20240509123242187"></p><p>过程：</p><ol><li>Master 主库在事务提交时，会把数据变更记录在二进制日志文件 Binlog 中。</li><li>从库读取主库的二进制日志文件 Binlog ，写入到从库的中继日志 Relay Log 。</li><li>slave重做中继日志中的事件，将改变反映它自己的数据，</li></ol>]]></content>
+        <content type="html"><![CDATA[<h1 id="什么是MVCC"><a href="#什么是MVCC" class="headerlink" title="什么是MVCC"></a>什么是MVCC</h1><ul><li>MVCC指的是<strong>多版本并发控制</strong></li><li>用于<strong>实现事务的并发控制</strong></li><li>它运行<strong>同一个时间</strong> <strong>多个事务</strong> 对<strong>同一个数据集</strong>进行<strong>读写操作</strong></li><li>同时防止数据不一致和其他问题</li></ul><h1 id="MVCC的实现机制"><a href="#MVCC的实现机制" class="headerlink" title="MVCC的实现机制"></a>MVCC的实现机制</h1><h2 id="隐藏字段和undo-log"><a href="#隐藏字段和undo-log" class="headerlink" title="隐藏字段和undo log"></a>隐藏字段和undo log</h2><ul><li>在一行数据中 有两个隐藏字段 一个是版本号 一个是回滚指针  </li><li>多版本链表（Multi-Version List）来存储数据。每个数据⾏都会 有⼀个多版本链表，其中存储着该⾏数据的所有历史版本</li><li>每次修改数据 版本号会自增  回滚指针指向上一个版本数据</li><li>链表头存放最新的数据 链表尾存放的是最早的数据</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159369.png" alt="image-20240509114607417"></p><h2 id="当前读和快照度"><a href="#当前读和快照度" class="headerlink" title="当前读和快照度"></a>当前读和快照度</h2><ul><li>当前读：读的时候加锁 这样别的事务无法修改 读到的是最新的数据 但是读写互斥</li><li>快照度：读的时候不加锁 读的是快照版本 可能不是最新的数据 读写不互斥 能够并发执行</li></ul><h2 id="readView读视图"><a href="#readView读视图" class="headerlink" title="readView读视图"></a>readView读视图</h2><h3 id="什么是readView"><a href="#什么是readView" class="headerlink" title="什么是readView?"></a>什么是readView?</h3><p>当事务读取数据时 会生成一个读视图  readView是记录当前未提交事务的id 也是MVCC读取数据的依据</p><p>如图所示：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091159123.png" alt="image-20240509115901920"></p><h3 id="ReadView属性："><a href="#ReadView属性：" class="headerlink" title="ReadView属性："></a>ReadView属性：</h3><ol><li>未提交事务id</li><li>最小事务id</li><li>最大事务id+1</li><li>当前事务id</li></ol><h2 id="MVCC执行过程"><a href="#MVCC执行过程" class="headerlink" title="MVCC执行过程"></a>MVCC执行过程</h2><p>通过内部定义的一些规则 将多版本链表（Multi-Version List）中的版本号进行比对 最后读到是复合规则的版本号</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091209834.png" alt="file_1715227737714_457"></p><h3 id="过程（RC级别）："><a href="#过程（RC级别）：" class="headerlink" title="过程（RC级别）："></a>过程（RC级别）：</h3><ol><li><p>在查询时获取读视图</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217835.png" alt="image-20240509121030345"></p></li><li><p>将版本号放入规则匹配 从最新的版本开始：</p><ul><li>将4带进去</li><li>4！&#x3D;5</li><li>4！&lt;3</li><li>4！&gt;6</li><li>4在3和6之间 但是4在活跃id集合中{3,4,5}</li><li>结果： 4中的数据不符合</li><li>将3放进去重新匹配</li></ul></li><li><p>经过匹配找到复合的版本数据 最后只有2这个版本复合 所以只能读到2的数据</p></li><li><p>同理 下一个读视图 </p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091217373.png" alt="image-20240509121741140"></p></li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405091218861.png" alt="image-20240509121821879"></p><h2 id="RC级别和RR级别"><a href="#RC级别和RR级别" class="headerlink" title="RC级别和RR级别"></a>RC级别和RR级别</h2><ul><li>RC级别：每次查询生成一个读视图</li><li>RR级别：复用第一次查询的读视图</li></ul>]]></content>
       
       
       <categories>
@@ -229,11 +529,11 @@
     
     
     <entry>
-      <title>Linux下安装Redis</title>
-      <link href="/2024/04/30/day16-Linux%E4%B8%8B%E5%AE%89%E8%A3%85Redis/"/>
-      <url>/2024/04/30/day16-Linux%E4%B8%8B%E5%AE%89%E8%A3%85Redis/</url>
+      <title>Linux permission denied解决方法</title>
+      <link href="/2024/04/30/day16-Linux%20permission%20denied%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/"/>
+      <url>/2024/04/30/day16-Linux%20permission%20denied%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
       
-        <content type="html"><![CDATA[<h1 id="Linux下安装Redis"><a href="#Linux下安装Redis" class="headerlink" title="Linux下安装Redis"></a>Linux下安装Redis</h1><p>1.下载安装包</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://download.redis.io/releases/redis-5.0.14.tar.gz</span><br></pre></td></tr></table></figure><p>2.解压</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -zvxf redis-5.0.14.tar.gz -C /usr/local/redis</span><br></pre></td></tr></table></figure><p>3.然后进入到redis目录，进入redis-6.0.5，然后执行make，控制台会输出一编译的信息</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071624809.png" alt="image-20240502000927611"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071624918.png" alt="image-20240502000939608"></p><p>4.安装</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make PREFIX=/usr/local/redis install</span><br></pre></td></tr></table></figure><p>5.启动</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd src</span><br><span class="line">./redis-server</span><br></pre></td></tr></table></figure><p>6.参考：</p><p><a href="https://blog.csdn.net/qq_45784913/article/details/120678054?ops_request_misc=%7B%22request_id%22:%22171457724316800184124504%22,%22scm%22:%2220140713.130102334..%22%7D&request_id=171457724316800184124504&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-120678054-null-null.142%5Ev100%5Epc_search_result_base9&utm_term=linux%E5%AE%89%E8%A3%85redis&spm=1018.2226.3001.4187">Linux下安装Redis（超详细教程）_linux安装redis-CSDN博客</a></p>]]></content>
+        <content type="html"><![CDATA[<h1 id="Linux-permission-denied解决方法"><a href="#Linux-permission-denied解决方法" class="headerlink" title="Linux permission denied解决方法"></a>Linux permission denied解决方法</h1><p>其实就是你权限不够 你登录root就可以了</p><p>在命令行中输入su </p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su</span><br></pre></td></tr></table></figure><p>然后输入密码：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071624752.png" alt="image-20240501223408025"></p><p>有root就能权限够了</p><p>如果不记得密码可以重新设置：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071624433.png" alt="image-20240501223524229"></p>]]></content>
       
       
       <categories>
@@ -254,11 +554,11 @@
     
     
     <entry>
-      <title>Linux permission denied解决方法</title>
-      <link href="/2024/04/30/day16-Linux%20permission%20denied%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/"/>
-      <url>/2024/04/30/day16-Linux%20permission%20denied%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>
+      <title>Linux下安装Redis</title>
+      <link href="/2024/04/30/day16-Linux%E4%B8%8B%E5%AE%89%E8%A3%85Redis/"/>
+      <url>/2024/04/30/day16-Linux%E4%B8%8B%E5%AE%89%E8%A3%85Redis/</url>
       
-        <content type="html"><![CDATA[<h1 id="Linux-permission-denied解决方法"><a href="#Linux-permission-denied解决方法" class="headerlink" title="Linux permission denied解决方法"></a>Linux permission denied解决方法</h1><p>其实就是你权限不够 你登录root就可以了</p><p>在命令行中输入su </p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su</span><br></pre></td></tr></table></figure><p>然后输入密码：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071624752.png" alt="image-20240501223408025"></p><p>有root就能权限够了</p><p>如果不记得密码可以重新设置：</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071624433.png" alt="image-20240501223524229"></p>]]></content>
+        <content type="html"><![CDATA[<h1 id="Linux下安装Redis"><a href="#Linux下安装Redis" class="headerlink" title="Linux下安装Redis"></a>Linux下安装Redis</h1><p>1.下载安装包</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://download.redis.io/releases/redis-5.0.14.tar.gz</span><br></pre></td></tr></table></figure><p>2.解压</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -zvxf redis-5.0.14.tar.gz -C /usr/local/redis</span><br></pre></td></tr></table></figure><p>3.然后进入到redis目录，进入redis-6.0.5，然后执行make，控制台会输出一编译的信息</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071624809.png" alt="image-20240502000927611"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071624918.png" alt="image-20240502000939608"></p><p>4.安装</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make PREFIX=/usr/local/redis install</span><br></pre></td></tr></table></figure><p>5.启动</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd src</span><br><span class="line">./redis-server</span><br></pre></td></tr></table></figure><p>6.参考：</p><p><a href="https://blog.csdn.net/qq_45784913/article/details/120678054?ops_request_misc=%7B%22request_id%22:%22171457724316800184124504%22,%22scm%22:%2220140713.130102334..%22%7D&request_id=171457724316800184124504&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~top_positive~default-1-120678054-null-null.142%5Ev100%5Epc_search_result_base9&utm_term=linux%E5%AE%89%E8%A3%85redis&spm=1018.2226.3001.4187">Linux下安装Redis（超详细教程）_linux安装redis-CSDN博客</a></p>]]></content>
       
       
       <categories>
@@ -379,11 +679,11 @@
     
     
     <entry>
-      <title>pom打包没有original文件</title>
-      <link href="/2024/04/29/day4%20pom%E6%89%93%E5%8C%85%E6%B2%A1%E6%9C%89original%E6%96%87%E4%BB%B6/"/>
-      <url>/2024/04/29/day4%20pom%E6%89%93%E5%8C%85%E6%B2%A1%E6%9C%89original%E6%96%87%E4%BB%B6/</url>
+      <title>自定义异常类如何消除trace信息 ^-^</title>
+      <link href="/2024/04/29/day3-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BC%82%E5%B8%B8%E7%B1%BB%E5%A6%82%E4%BD%95%E6%B6%88%E9%99%A4trace%E4%BF%A1%E6%81%AF/"/>
+      <url>/2024/04/29/day3-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BC%82%E5%B8%B8%E7%B1%BB%E5%A6%82%E4%BD%95%E6%B6%88%E9%99%A4trace%E4%BF%A1%E6%81%AF/</url>
       
-        <content type="html"><![CDATA[<h1 id="pom打包没有original文件"><a href="#pom打包没有original文件" class="headerlink" title="pom打包没有original文件"></a><strong>pom打包没有original文件</strong></h1><h2 id="原因1：pom没有parent"><a href="#原因1：pom没有parent" class="headerlink" title="原因1：pom没有parent"></a><strong>原因1：pom没有parent</strong></h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071614646.png" alt="image-20240326151032972"></p><h2 id="原因2：没有引入以下插件"><a href="#原因2：没有引入以下插件" class="headerlink" title="原因2：没有引入以下插件"></a><strong>原因2：没有引入以下插件</strong></h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071614693.png" alt="image-20240326151126285"></p><h1 id="报错：There-are-test-failures"><a href="#报错：There-are-test-failures" class="headerlink" title="报错：There are test failures."></a>报错：There are test failures.</h1><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071614783.png" alt="image-20240326151231834"></p><h2 id="解决方法：在properties文件中加入以下标签"><a href="#解决方法：在properties文件中加入以下标签" class="headerlink" title="解决方法：在properties文件中加入以下标签"></a>解决方法：在properties文件中加入以下标签</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071614284.png" alt="image-20240326151320097"></p>]]></content>
+        <content type="html"><![CDATA[<h1 id="自定义异常类如何消除trace信息"><a href="#自定义异常类如何消除trace信息" class="headerlink" title="自定义异常类如何消除trace信息"></a>自定义异常类如何消除trace信息</h1><p>当我们自定义java的异常类，需要将报错信息返回给前端 但是通常trace中的报错信息很多 不需要将太多信息返回给前端怎么办</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609976.png" alt="image-20240322180904395"></p><p>如图：上图中trace记录堆栈的跳转 让报错显得臃肿</p><p><strong>解决方案：</strong></p><p>在自定义异常类中重写fillInStackTrace()方法</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609656.png" alt="image-20240322181054096"></p><p><strong>成功解决：</strong></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609338.png" alt="image-20240322181130216"></p><h2 id="ErrorAxiosError-Network-Error-at-XMLHttpRequest-handleError"><a href="#ErrorAxiosError-Network-Error-at-XMLHttpRequest-handleError" class="headerlink" title="ErrorAxiosError: Network Error at XMLHttpRequest.handleError"></a>ErrorAxiosError: Network Error at XMLHttpRequest.handleError</h2><p>因为这是你很可能是你的粗心而导致的报错【因为你对路径出错了】</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609620.png" alt="image-20240322181749081"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609765.png" alt="image-20240322181749081"></p><h2 id="前后端跨域"><a href="#前后端跨域" class="headerlink" title="前后端跨域"></a>前后端跨域</h2><p>什么是跨域？</p><p>跨域是指前端后端 端口、协议、不同，但是前端还是请求另一个端口，就会报错。</p><p><strong>解决方法：</strong></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071610783.png" alt="image-20240322182708189"></p><p>在后端Controller层中加入@CrossOrigin(origins &#x3D; {“<a href="http://localhost:5173" })注解">http://localhost:5173&quot;})注解</a></p><p><a href="http://localhost:5173/">http://localhost:5173</a> ：为前端地址</p>]]></content>
       
       
       <categories>
@@ -404,11 +704,11 @@
     
     
     <entry>
-      <title>自定义异常类如何消除trace信息 ^-^</title>
-      <link href="/2024/04/29/day3-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BC%82%E5%B8%B8%E7%B1%BB%E5%A6%82%E4%BD%95%E6%B6%88%E9%99%A4trace%E4%BF%A1%E6%81%AF/"/>
-      <url>/2024/04/29/day3-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BC%82%E5%B8%B8%E7%B1%BB%E5%A6%82%E4%BD%95%E6%B6%88%E9%99%A4trace%E4%BF%A1%E6%81%AF/</url>
+      <title>pom打包没有original文件</title>
+      <link href="/2024/04/29/day4%20pom%E6%89%93%E5%8C%85%E6%B2%A1%E6%9C%89original%E6%96%87%E4%BB%B6/"/>
+      <url>/2024/04/29/day4%20pom%E6%89%93%E5%8C%85%E6%B2%A1%E6%9C%89original%E6%96%87%E4%BB%B6/</url>
       
-        <content type="html"><![CDATA[<h1 id="自定义异常类如何消除trace信息"><a href="#自定义异常类如何消除trace信息" class="headerlink" title="自定义异常类如何消除trace信息"></a>自定义异常类如何消除trace信息</h1><p>当我们自定义java的异常类，需要将报错信息返回给前端 但是通常trace中的报错信息很多 不需要将太多信息返回给前端怎么办</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609976.png" alt="image-20240322180904395"></p><p>如图：上图中trace记录堆栈的跳转 让报错显得臃肿</p><p><strong>解决方案：</strong></p><p>在自定义异常类中重写fillInStackTrace()方法</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609656.png" alt="image-20240322181054096"></p><p><strong>成功解决：</strong></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609338.png" alt="image-20240322181130216"></p><h2 id="ErrorAxiosError-Network-Error-at-XMLHttpRequest-handleError"><a href="#ErrorAxiosError-Network-Error-at-XMLHttpRequest-handleError" class="headerlink" title="ErrorAxiosError: Network Error at XMLHttpRequest.handleError"></a>ErrorAxiosError: Network Error at XMLHttpRequest.handleError</h2><p>因为这是你很可能是你的粗心而导致的报错【因为你对路径出错了】</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609620.png" alt="image-20240322181749081"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071609765.png" alt="image-20240322181749081"></p><h2 id="前后端跨域"><a href="#前后端跨域" class="headerlink" title="前后端跨域"></a>前后端跨域</h2><p>什么是跨域？</p><p>跨域是指前端后端 端口、协议、不同，但是前端还是请求另一个端口，就会报错。</p><p><strong>解决方法：</strong></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071610783.png" alt="image-20240322182708189"></p><p>在后端Controller层中加入@CrossOrigin(origins &#x3D; {“<a href="http://localhost:5173" })注解">http://localhost:5173&quot;})注解</a></p><p><a href="http://localhost:5173/">http://localhost:5173</a> ：为前端地址</p>]]></content>
+        <content type="html"><![CDATA[<h1 id="pom打包没有original文件"><a href="#pom打包没有original文件" class="headerlink" title="pom打包没有original文件"></a><strong>pom打包没有original文件</strong></h1><h2 id="原因1：pom没有parent"><a href="#原因1：pom没有parent" class="headerlink" title="原因1：pom没有parent"></a><strong>原因1：pom没有parent</strong></h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071614646.png" alt="image-20240326151032972"></p><h2 id="原因2：没有引入以下插件"><a href="#原因2：没有引入以下插件" class="headerlink" title="原因2：没有引入以下插件"></a><strong>原因2：没有引入以下插件</strong></h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071614693.png" alt="image-20240326151126285"></p><h1 id="报错：There-are-test-failures"><a href="#报错：There-are-test-failures" class="headerlink" title="报错：There are test failures."></a>报错：There are test failures.</h1><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071614783.png" alt="image-20240326151231834"></p><h2 id="解决方法：在properties文件中加入以下标签"><a href="#解决方法：在properties文件中加入以下标签" class="headerlink" title="解决方法：在properties文件中加入以下标签"></a>解决方法：在properties文件中加入以下标签</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405071614284.png" alt="image-20240326151320097"></p>]]></content>
       
       
       <categories>
@@ -623,11 +923,11 @@
     
     
     <entry>
-      <title>索引创建的原则</title>
-      <link href="/2024/04/26/MySql04-%E7%B4%A2%E5%BC%95%E5%88%9B%E5%BB%BA%E5%8E%9F%E5%88%99%20%E4%B8%BA%E4%BD%95%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88/"/>
-      <url>/2024/04/26/MySql04-%E7%B4%A2%E5%BC%95%E5%88%9B%E5%BB%BA%E5%8E%9F%E5%88%99%20%E4%B8%BA%E4%BD%95%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88/</url>
+      <title>什么是聚簇索引什么是非聚簇索引?</title>
+      <link href="/2024/04/26/MySql03-%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95%E3%80%81%E9%9D%9E%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95/"/>
+      <url>/2024/04/26/MySql03-%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95%E3%80%81%E9%9D%9E%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95/</url>
       
-        <content type="html"><![CDATA[<h1 id="索引创建的原则"><a href="#索引创建的原则" class="headerlink" title="索引创建的原则"></a>索引创建的原则</h1><ul><li>针对于数据量较大，且查询比较频繁的表建立索引。   单表超过10万数据(增加用户体验)</li><li>针对于常作为查询条件(where)、排序(orderby)、分组(group by)操作的字段建立索引</li><li>尽量选择区分度高的列作为索引，尽量建立唯一索引，区分度越高，使用索引的效率越高。</li><li>如果是字符串类型的字段，字段的长度较长，可以针对于字段的特点，建立前缀索引（就是用字符串的前面几个字）。</li><li>尽量使用联合索引，减少单列索引，查询时，联合索引很多时候可以覆盖索引，节省存储空间，避免回表，提高查询效率。</li><li>要控制索引的数量，索引并不是多多益善，索引越多，维护索引结构的代价也就越大，会影响增删改的效率。</li></ul><h1 id="什么时候索引会失效"><a href="#什么时候索引会失效" class="headerlink" title="什么时候索引会失效"></a>什么时候索引会失效</h1><p><strong>name status address 为联合索引</strong></p><h2 id="正例"><a href="#正例" class="headerlink" title="正例"></a>正例</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318853.png" alt="image-20240424171618229"></p><h3 id="违反最左前缀法则"><a href="#违反最左前缀法则" class="headerlink" title="违反最左前缀法则"></a>违反最左前缀法则</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318866.png" alt="image-20240424171755606"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318026.png" alt="image-20240424171807925"></p><h3 id="范围查询右边的列，不能使用索引"><a href="#范围查询右边的列，不能使用索引" class="headerlink" title="范围查询右边的列，不能使用索引"></a>范围查询右边的列，不能使用索引</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318773.png" alt="image-20240424171841838"></p><p>status 是一个范围  status右边的列不会生效</p><h3 id="不要在索引列上进行运算操作，索引将失效"><a href="#不要在索引列上进行运算操作，索引将失效" class="headerlink" title="不要在索引列上进行运算操作，索引将失效"></a>不要在索引列上进行运算操作，索引将失效</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318773.png" alt="image-20240424172055613"></p><h3 id="字符串不加单引号，造成索引失效。"><a href="#字符串不加单引号，造成索引失效。" class="headerlink" title="字符串不加单引号，造成索引失效。"></a>字符串不加单引号，造成索引失效。</h3><h2 id><a href="#" class="headerlink" title></a><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318011.png" alt="image-20240424172132329"></h2><h3 id="以-开头的Like模糊查询，索引失效。"><a href="#以-开头的Like模糊查询，索引失效。" class="headerlink" title="以%开头的Like模糊查询，索引失效。"></a>以%开头的Like模糊查询，索引失效。</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318971.png" alt="image-20240424172232785"></p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol><li>违反最左前缀法则</li><li>范围查询右边的列，不能使用索引</li><li>不要在索引列上进行运算操作，索引将失效</li><li>字符串不加单引号，造成索引失效。(类型转换)</li><li>以%开头的Like模糊查询，索引失效。</li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318844.png" alt="image-20240424172355280"></p>]]></content>
+        <content type="html"><![CDATA[<h1 id="什么是聚簇索引什么是非聚簇索引"><a href="#什么是聚簇索引什么是非聚簇索引" class="headerlink" title="什么是聚簇索引什么是非聚簇索引?"></a>什么是聚簇索引什么是非聚簇索引?</h1><h2 id="聚集索引-Clustered-Index"><a href="#聚集索引-Clustered-Index" class="headerlink" title="聚集索引(Clustered Index)"></a>聚集索引(Clustered Index)</h2><ul><li>必须有 且只能有一个（主键）</li><li>数据与索引放到一块，B+树的叶子节点保存了整行数据</li></ul><h4 id="聚集索引选取规则"><a href="#聚集索引选取规则" class="headerlink" title="聚集索引选取规则"></a>聚集索引选取规则</h4><ul><li>如果存在主键，主键索引就是聚集索引。</li><li>如果不存在主键，将使用第一个唯一(UNIQUE)索引作为聚集索引</li><li>如果表没有主键，或没有合适的唯一索引，则InnoDB会自动生成一个rowid作为隐藏的聚集索引</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317574.png" alt="image-20240424141405743"></p><p><strong>如图 在聚集索引的叶子结点存的是整行数据</strong></p><h2 id="二级索引-非聚簇索引"><a href="#二级索引-非聚簇索引" class="headerlink" title="二级索引(非聚簇索引)"></a>二级索引(非聚簇索引)</h2><ul><li>数据与索引分开存储，B+树的叶子节点保存对应的主键</li><li>可以存在多个</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317286.png" alt="image-20240424144105845"></p><p>二级索引的叶子结点存的数据为主键Id</p><h2 id="回表查询"><a href="#回表查询" class="headerlink" title="回表查询"></a>回表查询</h2><ul><li>通过二级索引找到对应的主键值，到聚集索引中查找整行数据，这个过程就是回表</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317121.png" alt="image-20240424143653014"></p><p>回表查询 指的是通过二级索引 找到主键 然后去聚集索引找到该行 </p><h2 id="什么是覆盖索引？"><a href="#什么是覆盖索引？" class="headerlink" title="什么是覆盖索引？"></a>什么是覆盖索引？</h2><ul><li>覆盖索引 指的是查询的字段在索引中都能找到 不需要回表</li></ul>]]></content>
       
       
       <categories>
@@ -648,11 +948,11 @@
     
     
     <entry>
-      <title>什么是聚簇索引什么是非聚簇索引?</title>
-      <link href="/2024/04/26/MySql03-%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95%E3%80%81%E9%9D%9E%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95/"/>
-      <url>/2024/04/26/MySql03-%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95%E3%80%81%E9%9D%9E%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95/</url>
+      <title>索引创建的原则</title>
+      <link href="/2024/04/26/MySql04-%E7%B4%A2%E5%BC%95%E5%88%9B%E5%BB%BA%E5%8E%9F%E5%88%99%20%E4%B8%BA%E4%BD%95%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88/"/>
+      <url>/2024/04/26/MySql04-%E7%B4%A2%E5%BC%95%E5%88%9B%E5%BB%BA%E5%8E%9F%E5%88%99%20%E4%B8%BA%E4%BD%95%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88/</url>
       
-        <content type="html"><![CDATA[<h1 id="什么是聚簇索引什么是非聚簇索引"><a href="#什么是聚簇索引什么是非聚簇索引" class="headerlink" title="什么是聚簇索引什么是非聚簇索引?"></a>什么是聚簇索引什么是非聚簇索引?</h1><h2 id="聚集索引-Clustered-Index"><a href="#聚集索引-Clustered-Index" class="headerlink" title="聚集索引(Clustered Index)"></a>聚集索引(Clustered Index)</h2><ul><li>必须有 且只能有一个（主键）</li><li>数据与索引放到一块，B+树的叶子节点保存了整行数据</li></ul><h4 id="聚集索引选取规则"><a href="#聚集索引选取规则" class="headerlink" title="聚集索引选取规则"></a>聚集索引选取规则</h4><ul><li>如果存在主键，主键索引就是聚集索引。</li><li>如果不存在主键，将使用第一个唯一(UNIQUE)索引作为聚集索引</li><li>如果表没有主键，或没有合适的唯一索引，则InnoDB会自动生成一个rowid作为隐藏的聚集索引</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317574.png" alt="image-20240424141405743"></p><p><strong>如图 在聚集索引的叶子结点存的是整行数据</strong></p><h2 id="二级索引-非聚簇索引"><a href="#二级索引-非聚簇索引" class="headerlink" title="二级索引(非聚簇索引)"></a>二级索引(非聚簇索引)</h2><ul><li>数据与索引分开存储，B+树的叶子节点保存对应的主键</li><li>可以存在多个</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317286.png" alt="image-20240424144105845"></p><p>二级索引的叶子结点存的数据为主键Id</p><h2 id="回表查询"><a href="#回表查询" class="headerlink" title="回表查询"></a>回表查询</h2><ul><li>通过二级索引找到对应的主键值，到聚集索引中查找整行数据，这个过程就是回表</li></ul><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102317121.png" alt="image-20240424143653014"></p><p>回表查询 指的是通过二级索引 找到主键 然后去聚集索引找到该行 </p><h2 id="什么是覆盖索引？"><a href="#什么是覆盖索引？" class="headerlink" title="什么是覆盖索引？"></a>什么是覆盖索引？</h2><ul><li>覆盖索引 指的是查询的字段在索引中都能找到 不需要回表</li></ul>]]></content>
+        <content type="html"><![CDATA[<h1 id="索引创建的原则"><a href="#索引创建的原则" class="headerlink" title="索引创建的原则"></a>索引创建的原则</h1><ul><li>针对于数据量较大，且查询比较频繁的表建立索引。   单表超过10万数据(增加用户体验)</li><li>针对于常作为查询条件(where)、排序(orderby)、分组(group by)操作的字段建立索引</li><li>尽量选择区分度高的列作为索引，尽量建立唯一索引，区分度越高，使用索引的效率越高。</li><li>如果是字符串类型的字段，字段的长度较长，可以针对于字段的特点，建立前缀索引（就是用字符串的前面几个字）。</li><li>尽量使用联合索引，减少单列索引，查询时，联合索引很多时候可以覆盖索引，节省存储空间，避免回表，提高查询效率。</li><li>要控制索引的数量，索引并不是多多益善，索引越多，维护索引结构的代价也就越大，会影响增删改的效率。</li></ul><h1 id="什么时候索引会失效"><a href="#什么时候索引会失效" class="headerlink" title="什么时候索引会失效"></a>什么时候索引会失效</h1><p><strong>name status address 为联合索引</strong></p><h2 id="正例"><a href="#正例" class="headerlink" title="正例"></a>正例</h2><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318853.png" alt="image-20240424171618229"></p><h3 id="违反最左前缀法则"><a href="#违反最左前缀法则" class="headerlink" title="违反最左前缀法则"></a>违反最左前缀法则</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318866.png" alt="image-20240424171755606"></p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318026.png" alt="image-20240424171807925"></p><h3 id="范围查询右边的列，不能使用索引"><a href="#范围查询右边的列，不能使用索引" class="headerlink" title="范围查询右边的列，不能使用索引"></a>范围查询右边的列，不能使用索引</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318773.png" alt="image-20240424171841838"></p><p>status 是一个范围  status右边的列不会生效</p><h3 id="不要在索引列上进行运算操作，索引将失效"><a href="#不要在索引列上进行运算操作，索引将失效" class="headerlink" title="不要在索引列上进行运算操作，索引将失效"></a>不要在索引列上进行运算操作，索引将失效</h3><p>反例</p><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318773.png" alt="image-20240424172055613"></p><h3 id="字符串不加单引号，造成索引失效。"><a href="#字符串不加单引号，造成索引失效。" class="headerlink" title="字符串不加单引号，造成索引失效。"></a>字符串不加单引号，造成索引失效。</h3><h2 id><a href="#" class="headerlink" title></a><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318011.png" alt="image-20240424172132329"></h2><h3 id="以-开头的Like模糊查询，索引失效。"><a href="#以-开头的Like模糊查询，索引失效。" class="headerlink" title="以%开头的Like模糊查询，索引失效。"></a>以%开头的Like模糊查询，索引失效。</h3><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318971.png" alt="image-20240424172232785"></p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol><li>违反最左前缀法则</li><li>范围查询右边的列，不能使用索引</li><li>不要在索引列上进行运算操作，索引将失效</li><li>字符串不加单引号，造成索引失效。(类型转换)</li><li>以%开头的Like模糊查询，索引失效。</li></ol><p><img src="https://qqf-web-tlias.oss-cn-hangzhou.aliyuncs.com/markdown/202405102318844.png" alt="image-20240424172355280"></p>]]></content>
       
       
       <categories>
@@ -742,7 +1042,7 @@
     
     
     <entry>
-      <title>什么是Aop ,Aop的应用场景有哪些?</title>
+      <title>Spring事务失效的场景有哪些</title>
       <link href="/2024/04/25/Spring03-Spring%E4%BA%8B%E5%8A%A1%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF%E6%9C%89%E5%93%AA%E4%BA%9B/"/>
       <url>/2024/04/25/Spring03-Spring%E4%BA%8B%E5%8A%A1%E5%A4%B1%E6%95%88%E7%9A%84%E5%9C%BA%E6%99%AF%E6%9C%89%E5%93%AA%E4%BA%9B/</url>
       
@@ -767,7 +1067,7 @@
     
     
     <entry>
-      <title>什么是Aop ,Aop的应用场景有哪些?</title>
+      <title>Spring的Bean周期</title>
       <link href="/2024/04/25/Spring04-Spring%E7%9A%84Bean%E5%91%A8%E6%9C%9F/"/>
       <url>/2024/04/25/Spring04-Spring%E7%9A%84Bean%E5%91%A8%E6%9C%9F/</url>
       
